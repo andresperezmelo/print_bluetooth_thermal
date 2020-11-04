@@ -21,7 +21,7 @@ Como usuarlo?
 
 Despues de eso puede usar **printBluetooth**
 Las funciones son:
-1. `printBluetooth.getBluetooths()` Busca los bluettoths vinculados en el dispositivo
+1. `printBluetooth.getBluetooths` Busca los bluettoths vinculados en el dispositivo
 
 2. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora vinculada
 
@@ -29,23 +29,25 @@ Las funciones son:
 
 4. `printBluetooth.writeText()` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
 
-5. `printBluetooth.getNivelBateria()` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
+5. `printBluetooth.getNivelBateria` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
 
 Aqui el ejemplo o vea example
 
 ```
-class ExampleBluetoothPrint extends StatefulWidget {
-  @override
-  _ExampleBluetoothPrintState createState() => _ExampleBluetoothPrintState();
-}
+class _MyAppState extends State<MyApp> {
+  String _platformVersion = 'Unknown';
 
-class _ExampleBluetoothPrintState extends State<ExampleBluetoothPrint> {
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+  }
 
   bool conceted = false;
   List items = new List();
 
   Future<void> getBluetoots()async{
-    final List bluetooths = await printBluetooth.getBluetooths();
+    final List bluetooths = await PrintBluetoothThermal.getBluetooths;
     print("impresion $bluetooths");
     setState(() {
       items = bluetooths;
@@ -53,7 +55,7 @@ class _ExampleBluetoothPrintState extends State<ExampleBluetoothPrint> {
   }
 
   Future<void> setConectar(String mac)async{
-    final String result = await printBluetooth.conectar(mac);
+    final String result = await PrintBluetoothThermal.conectar(mac);
     print("impresion $result");
     if(result=="true") conceted = true;
     setState(() {
@@ -64,7 +66,7 @@ class _ExampleBluetoothPrintState extends State<ExampleBluetoothPrint> {
 
   Future<void> imprimirTicket()async{
     Ticket ticket = await reciboPrueba();
-    final result = await printBluetooth.writeBytes(ticket.bytes);
+    final result = await PrintBluetoothThermal.writeBytes(ticket.bytes);
     print("impresion $result");
   }
 
@@ -74,11 +76,11 @@ class _ExampleBluetoothPrintState extends State<ExampleBluetoothPrint> {
     String size3 = "3/Impresora térmica ñ \n *";
     String size4 = "4/Impresora térmica ñ \n *";
     String size5 = "5/Impresora térmica ñ \n *";
-    final result1 = await printBluetooth.writeText(size1);
-    final result2 = await printBluetooth.writeText(size2);
-    final result3 = await printBluetooth.writeText(size3);
-    final result4 = await printBluetooth.writeText(size4);
-    final result5 = await printBluetooth.writeText(size5);
+    final result1 = await PrintBluetoothThermal.writeText(size1);
+    final result2 = await PrintBluetoothThermal.writeText(size2);
+    final result3 = await PrintBluetoothThermal.writeText(size3);
+    final result4 = await PrintBluetoothThermal.writeText(size4);
+    final result5 = await PrintBluetoothThermal.writeText(size5);
     //print("impresion $result");
   }
 
@@ -149,63 +151,79 @@ class _ExampleBluetoothPrintState extends State<ExampleBluetoothPrint> {
     return ticket;
   }
 
-  @override
-  void initState() {
-    super.initState();
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      platformVersion = await PrintBluetoothThermal.platformVersion;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Example"),),
-      body: Container(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Buscar bluetooth vinculados"),
-            OutlineButton(
-              onPressed: (){
-                this.getBluetoots();
-              },
-              child: Text("Buscar"),
-            ),
-            Container(
-              height: 200,
-              child: ListView.builder(
-                itemCount: items.length>0?items.length:0,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    onTap: (){
-                      String select = items[index];
-                      List lista = select.split("#");
-                      String name = lista[0];
-                      String mac = lista[1];
-                      this.setConectar(mac);
-                    },
-                    title: Text('${items[index]}'),
-                  );
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
+        ),
+        body: Container(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Running on: $_platformVersion\n'),
+              Text("Buscar bluetooth vinculados"),
+              OutlineButton(
+                onPressed: (){
+                  this.getBluetoots();
                 },
+                child: Text("Buscar"),
               ),
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            OutlineButton(
-              onPressed: conceted? this.imprimirTicket:null,
-              child: Text("Imprimir ticket"),
-            ),
-            OutlineButton(
-              onPressed: conceted?this.imprimirTextoPersonalizado:null,
-              child: Text("Imprimir texto"),
-            ),
-          ],
+              Container(
+                height: 200,
+                child: ListView.builder(
+                  itemCount: items.length>0?items.length:0,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      onTap: (){
+                        String select = items[index];
+                        List lista = select.split("#");
+                        String name = lista[0];
+                        String mac = lista[1];
+                        this.setConectar(mac);
+                      },
+                      title: Text('${items[index]}'),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              OutlineButton(
+                onPressed: conceted? this.imprimirTicket:null,
+                child: Text("Imprimir ticket"),
+              ),
+              OutlineButton(
+                onPressed: conceted?this.imprimirTextoPersonalizado:null,
+                child: Text("Imprimir texto"),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 ```
-
-
-
