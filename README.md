@@ -21,7 +21,7 @@ Como usuarlo?
 
 Despues de eso puede usar **printBluetooth**
 Las funciones son:
-1. `printBluetooth.getBluetooths()` Busca los bluettoths vinculados en el dispositivo
+1. `printBluetooth.getBluetooths` Busca los bluettoths vinculados en el dispositivo
 
 2. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora vinculada
 
@@ -29,7 +29,7 @@ Las funciones son:
 
 4. `printBluetooth.writeText()` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
 
-5. `printBluetooth.getNivelBateria()` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
+5. `printBluetooth.getNivelBateria` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
 
 Aqui el ejemplo o vea example
 
