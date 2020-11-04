@@ -1,5 +1,6 @@
 package app.web.groons.print_bluetooth_thermal
 
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -27,21 +28,22 @@ import java.util.*
 private const val TAG = "====>"
 private var outputStream: OutputStream? = null
 private lateinit var mac: String
-val REQUEST_ENABLE_BT = 2
-private var mContext: Context? = null
+//val REQUEST_ENABLE_BT = 2
 
 /** PrintBluetoothThermalPlugin */
-class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
+class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
+  private lateinit var mContext: Context
+  private lateinit var activity: Activity
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "groons.web.app/print")
     channel.setMethodCallHandler(this)
-    mContext = getContext(this)
+    this.mContext = flutterPluginBinding.applicationContext
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -130,10 +132,6 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     }
   }
 
-  fun getContext(ctx: PrintBluetoothThermalPlugin): Context {
-    return ctx.getContext(this)
-  }
-
   private fun getBatteryLevel(): Int {
     val batteryLevel: Int
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -183,8 +181,9 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     }
     //si no esta prendido
     if (bluetoothAdapter?.isEnabled == false) {
-      val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-      mContext.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+      //val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+      //startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+      mensajeToast("Bluetooth off")
     }
     //buscar bluetooth
     //Log.d(TAG, "buscando dispositivos: ")
@@ -268,8 +267,4 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
-}
-
-private fun Context?.startActivityForResult(enableBtIntent: Intent, requestEnableBt: Int) {
-
 }
