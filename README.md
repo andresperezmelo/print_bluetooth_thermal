@@ -1,10 +1,13 @@
 # print_bluetooth_thermal
 
 Paquete para imprimir tickets en impresoras termicas de 58 mm en Android.
+
 Este paquete surgio como alternativa a los actuales que usan el permiso de ubicacion y Google Play
 bloquea las aplicaciones que no explican para que usan el permiso de ubicacion.
 
 **Este paquete puede cambiar mucho en el futuro**
+
+**Si quieren aportar el codigo de swift, se necesita que reciba bytes sin procesar para usar la clase ticket**
 
 ## Getting Started
 
@@ -21,7 +24,7 @@ Como usuarlo?
 
 Despues de eso puede usar **printBluetooth**
 Las funciones son:
-1. `printBluetooth.getBluetooths` Busca los bluettoths vinculados en el dispositivo
+1. `printBluetooth.getBluetooths` Busca los bluetooths vinculados en el dispositivo
 
 2. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora vinculada
 
