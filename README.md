@@ -1,6 +1,6 @@
 # print_bluetooth_thermal
 
-Paquete para imprimir tickets en impresoras termicas de 58 mm en Android.
+Paquete para imprimir tickets en impresoras termicas de 58 mm o 80 mm en Android.
 
 Este paquete surgio como alternativa a los actuales que usan el permiso de ubicacion y Google Play
 bloquea las aplicaciones que no explican para que usan el permiso de ubicacion.
