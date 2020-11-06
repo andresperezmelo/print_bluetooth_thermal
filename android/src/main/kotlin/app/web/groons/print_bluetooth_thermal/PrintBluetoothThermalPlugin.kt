@@ -37,7 +37,6 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private lateinit var mContext: Context
-  private lateinit var activity: Activity
   private lateinit var channel : MethodChannel
   private lateinit var state:String
 
@@ -59,19 +58,23 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         result.error("UNAVAILABLE", "Battery level not available.", null)
       }
     }else if (call.method == "estadoConexion") {
-      
-      try{
-        outputStream?.write("\n".toByteArray())
-        result.success("true")
-      }catch (e: Exception){
-        outputStream = null
-        Log.d(TAG, "state print: ${e.message}")
-        var ex:String = e.message.toString()
-        if(ex=="Broken pipe"){
-          Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
+
+      if(outputStream != null) {
+        try{
+          outputStream?.run {
+            write(" ".toByteArray())
+            result.success("true")
+            //Log.d(TAG, "paso yes coexion ")
+          }
+        }catch (e: Exception){
+          result.success("false")
+          outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
+          //Log.d(TAG, "state print: ${e.message}")
         }
+      }else{
         result.success("false")
+        //Log.d(TAG, "no paso es false ")
       }
 
     } else if (call.method == "conectarImpresora") {
@@ -87,12 +90,12 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
             //result.success("true")
             //Toast.makeText(this@MainActivity, "Impresora conectada", Toast.LENGTH_SHORT).show()
           }.apply {
-            Log.d(TAG, "finalizo: conexion state:$state")
             result.success(state)
+            //Log.d(TAG, "finalizo: conexion state:$state")
           }
         }
       }
-    }else if (call.method == "imprimirTicket") {
+    }else if (call.method == "imprimirBytes") {
 
       var lista: List<Int> = call.arguments as List<Int>
       var bytes: ByteArray = "\n".toByteArray()
@@ -100,22 +103,26 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       lista.forEach {
         bytes += it.toByte() //Log.d(TAG, "foreah: ${it}")
       }
-      try{
-        outputStream?.write("\n".toByteArray())
-      }catch (e: Exception){
-        outputStream = null
-        Log.d(TAG, "state print: ${e.message}")
-        var ex:String = e.message.toString()
-        if(ex=="Broken pipe"){
-          Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
+      if(outputStream != null) {
+        try{
+          outputStream?.run {
+            write(bytes)
+            result.success("true")
+          }
+        }catch (e: Exception){
+          result.success("false")
+          outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
+          // Log.d(TAG, "state print: ${e.message}")
+          /*var ex:String = e.message.toString()
+          if(ex=="Broken pipe"){
+            Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
+            mensajeToast("Dispositivo fue desconectado, reconecte")
+          }*/
         }
+      }else{
         result.success("false")
       }
-      outputStream?.run {
-        write(bytes)
-        result.success("true")
-      }!!
 
     }else if (call.method == "imprimirTexto") {
 
@@ -123,32 +130,44 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       var lista = stringllego.split("*")
       //println("lista ${lista.toString()}")
 
-      try{
-        outputStream?.write("\n".toByteArray())
-      }catch (e: Exception){
-        Log.d(TAG, "state print text: ${e.message}")
-        outputStream = null
-        var ex:String = e.message.toString()
-        if(ex=="Broken pipe"){
-          Log.d(TAG, "Dispositivo fue apagado reconecte: ")
-          mensajeToast("Dispositivo fue apagado reconecte")
+      if(outputStream != null) {
+        try{
+          var size:Int = 0
+          var texto:String = ""
+          var linea = stringllego.split("/")
+          //Log.d(TAG, "lista llego: ${linea.size}")
+          if(linea.size>1) {
+            size = linea[0].toInt()
+            texto = linea[1]
+            if (size < 1 || size > 5) size = 2
+          }else{
+            size = 2
+            texto = stringllego
+            //Log.d(TAG, "lista llego 2 texto: ${texto} size: $size")
+          }
+
+          outputStream?.run {
+            write(setBytes.size[0])
+            write(setBytes.cancelar_chino)
+            write(setBytes.caracteres_escape)
+            write(setBytes.size[size])
+            write(texto.toByteArray(charset("iso-8859-1")))
+            result.success("true")
+          }
+        }catch (e: Exception){
+          result.success("false")
+          outputStream = null
+          mensajeToast("Dispositivo fue desconectado, reconecte")
+          // Log.d(TAG, "state print: ${e.message}")
+          /*var ex:String = e.message.toString()
+          if(ex=="Broken pipe"){
+            Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
+            mensajeToast("Dispositivo fue desconectado, reconecte")
+          }*/
         }
+      }else{
         result.success("false")
       }
-
-      var linea = stringllego.split("/")
-      var size: Int = linea[0].toInt()
-      var texto: String = linea[1]
-      if(size<1||size>5)size=2
-
-      outputStream?.run {
-        write(setBytes.size[0])
-        write(setBytes.cancelar_chino)
-        write(setBytes.caracteres_escape)
-        write(setBytes.size[size])
-        write(texto.toByteArray(charset("iso-8859-1")))
-        result.success("true")
-      }!!
 
     }else if (call.method == "bluetoothVinculados") {
 
