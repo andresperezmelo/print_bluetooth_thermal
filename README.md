@@ -5,13 +5,11 @@ Paquete para imprimir tickets en impresoras termicas de 58 mm o 80 mm en Android
 Este paquete surgio como alternativa a los actuales que usan el permiso de ubicacion y Google Play
 bloquea las aplicaciones que no explican para que usan el permiso de ubicacion.
 
-**Este paquete puede cambiar mucho en el futuro**
-
 **Si quieren aportar el codigo de swift, se necesita que reciba bytes sin procesar para usar la clase ticket**
 
 ## Getting Started
 
-Como usuarlo?
+#Como usuarlo?
 
 *Importe el paquete `print_bluetooth_thermal`
 
@@ -23,18 +21,21 @@ Como usuarlo?
 *Llame al paquete  `import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart' as printBluetooth;`
 
 Despues de eso puede usar **printBluetooth**
-Las funciones son:
-1. `printBluetooth.getBluetooths` Busca los bluetooths vinculados en el dispositivo
+#Las funciones son:
 
-2. `printBluetooth.estadoConexion` mira el estado del dispositivo si esta conectado
+1. `printBluetooth.getBluetoothState` mira el estado del bluetooth si esta apagado o prendido
 
-3. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora vinculada
+2. `printBluetooth.getBluetooths` Busca los bluetooths vinculados en el dispositivo
 
-4. `printBluetooth.writeBytes()` Se usa para imprimir bytes en la impresora se puede usar con la clase ticket de [esc_pos_utils](https://pub.dev/packages/esc_pos_utils) y el paquete [Image](https://pub.dev/packages/image)
+3. `printBluetooth.estadoConexion` mira el estado del dispositivo si esta conectado
 
-5. `printBluetooth.writeText()` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
+4. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora vinculada
 
-6. `printBluetooth.getNivelBateria` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
+5. `printBluetooth.writeBytes()` Se usa para imprimir bytes en la impresora se puede usar con la clase ticket de [esc_pos_utils](https://pub.dev/packages/esc_pos_utils) y el paquete [Image](https://pub.dev/packages/image)
+
+6. `printBluetooth.writeText()` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
+
+7. `printBluetooth.getNivelBateria` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
 
 Aqui el ejemplo simple para un ejemplo completo vea example
 
