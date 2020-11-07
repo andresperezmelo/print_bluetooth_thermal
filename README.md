@@ -29,11 +29,11 @@ Despues de eso puede usar **printBluetooth**
 
 3. `printBluetooth.estadoConexion` mira el estado del dispositivo si esta conectado
 
-4. `printBluetooth.conectar()` Se usa para concetar la impresora se debe enviar la mac de la impresora a vincular
+4. `printBluetooth.conectar(String mac)` Se usa para concetar la impresora se debe enviar la mac de la impresora a vincular
 
-5. `printBluetooth.writeBytes()` Se usa para imprimir bytes en la impresora se puede usar con la clase ticket de [esc_pos_utils](https://pub.dev/packages/esc_pos_utils) y el paquete [Image](https://pub.dev/packages/image) para imprimir imagenes
+5. `printBluetooth.writeBytes(List<int> bytes)` Se usa para imprimir bytes en la impresora se puede usar con la clase ticket de [esc_pos_utils](https://pub.dev/packages/esc_pos_utils) y el paquete [Image](https://pub.dev/packages/image) para imprimir imagenes
 
-6. `printBluetooth.writeText()` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
+6. `printBluetooth.writeText(String text)` Se usa para imprimir texto personalizado que no tiene la clase tickets por ejemplo letra pequeña o letras muy grande, tiene 5 tamaños desde 1 hasta 5, todos los tamaños doblan al anterior
 
 7. `printBluetooth.getNivelBateria` Se usa para obtener el nivel de bateria es importante por que algunos telefonos si esta bajo la bateria apagan el bluetooth, lo deben implementar ustedes mismos, crear sus condiciones
 
