@@ -18,7 +18,7 @@ bloquea las aplicaciones que no explican para que usan el permiso de ubicacion.
 1. [esc_pos_utils](https://pub.dev/packages/esc_pos_utils) paquete para imprimir recibos `import package:esc_pos_utils/esc_pos_utils.dart'`
 2. [Image](https://pub.dev/packages/image) //para imprimir las imagenes `import 'package:image/image.dart' as Imagen`
 
-*Llame al paquete  `import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart' as printBluetooth;`
+*Llame al paquete  `import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart'`
 
 Despues de eso puede usar **printBluetooth**
 #Las funciones son:
