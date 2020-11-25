@@ -20,7 +20,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  String _msj = 'Unknown';
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> setConectar(String mac)async{
     final String result = await PrintBluetoothThermal.conectar(mac);
-    print("impresion $result");
+    print("state conected $result");
     if(result=="true") conceted = true;
     setState(() {
 
@@ -50,23 +50,53 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> imprimirTicket()async{
-    Ticket ticket = await reciboPrueba();
-    final result = await PrintBluetoothThermal.writeBytes(ticket.bytes);
-    print("impresion $result");
+    String conexion = await PrintBluetoothThermal.estadoConexion;
+    if(conexion=="true"){
+      Ticket ticket = await reciboPrueba();
+      final result = await PrintBluetoothThermal.writeBytes(ticket.bytes);
+      print("impresion $result");
+    }else{
+      //no conectado, reconecte
+    }
+  }
+
+  Future<void> imprimirTesh()async{
+
+    String conexion = await PrintBluetoothThermal.estadoConexion;
+    if(conexion=="true"){
+      String enter= '\n';
+      final result = await PrintBluetoothThermal.writeBytes(enter.codeUnits);
+      print("impresion $result");
+      //size of 1-5
+      String text = "ola";
+      await PrintBluetoothThermal.writeText("$text");
+      await PrintBluetoothThermal.writeText("5/$text") ;
+    }else{
+      //desconectado
+      print("desconectado $conexion");
+    }
   }
 
   Future<void> imprimirTextoPersonalizado()async{
-    String size1 = "1/Impresora térmica ñ \n *";
-    String size2 = "2/Impresora térmica ñ \n ";
-    String size3 = "3/Impresora térmica ñ \n *";
-    String size4 = "4/Impresora térmica ñ \n *";
-    String size5 = "5/Impresora térmica ñ \n *";
-    final result1 = await PrintBluetoothThermal.writeText(size1);
-    final result2 = await PrintBluetoothThermal.writeText(size2);
-    final result3 = await PrintBluetoothThermal.writeText(size3);
-    final result4 = await PrintBluetoothThermal.writeText(size4);
-    final result5 = await PrintBluetoothThermal.writeText(size5);
-    //print("impresion $result");
+
+    //doble // para dividir size//texto
+    String conexion = await PrintBluetoothThermal.estadoConexion;
+    if(conexion=="true"){
+      String size1 = "1//Hola \n ";
+      String size2 = "2//Hola \n ";
+      String size3 = "3//Hola \n ";
+      String size4 = "4//Hola \n ";
+      String size5 = "5//Hola \n ";
+      final result1 = await PrintBluetoothThermal.writeText(size1);
+      final result2 = await PrintBluetoothThermal.writeText(size2);
+      final result3 = await PrintBluetoothThermal.writeText(size3);
+      final result4 = await PrintBluetoothThermal.writeText(size4);
+      final result5 = await PrintBluetoothThermal.writeText(size5);
+      print("finalizo impresion");
+    }else{
+      //no conectado, reconecte
+      print("no conectado");
+    }
   }
 
   Future<Ticket> reciboPrueba()async{
@@ -136,12 +166,33 @@ class _MyAppState extends State<MyApp> {
     return ticket;
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> getStatedConection()async{
+
+    final String result = await PrintBluetoothThermal.estadoConexion;
+    print("state conected $result");
+    setState(() {
+      _msj = "Sin impresora conectada";
+    });
+
+  }
+
+  Future<void> getStatedBluetooth()async{
+
+    final String result = await PrintBluetoothThermal.getBluetoothState;
+    print("state conected $result");
+    setState(() {
+      _msj = "Bluetooth $result";
+    });
+
+  }
+
   Future<void> initPlatformState() async {
     String platformVersion;
+    int porcentbatery;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await PrintBluetoothThermal.platformVersion;
+      porcentbatery = await PrintBluetoothThermal.getNivelBateria;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -152,7 +203,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      _platformVersion = platformVersion;
+      _msj = platformVersion+" ($porcentbatery% bateria)";
     });
   }
 
@@ -168,7 +219,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Running on: $_platformVersion\n'),
+              Text('state: $_msj\n '),
               Text("Buscar bluetooth vinculados"),
               OutlineButton(
                 onPressed: (){
@@ -203,7 +254,15 @@ class _MyAppState extends State<MyApp> {
               ),
               OutlineButton(
                 onPressed: conceted?this.imprimirTextoPersonalizado:null,
-                child: Text("Imprimir texto"),
+                child: Text("Imprimir texto personalizado"),
+              ),
+              OutlineButton(
+                onPressed: conceted?this.imprimirTesh:null,
+                child: Text("test"),
+              ),
+              OutlineButton(
+                onPressed: this.getStatedBluetooth,
+                child: Text("stated bluetooth"),
               ),
             ],
           ),

@@ -51,12 +51,18 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       result.success("Android ${android.os.Build.VERSION.RELEASE}")
     }else if (call.method == "getBatteryLevel") {
       val batteryLevel = getBatteryLevel()
-
       if (batteryLevel != -1) {
         result.success(batteryLevel)
       } else {
         result.error("UNAVAILABLE", "Battery level not available.", null)
       }
+    }else if (call.method == "estadoBluetooth") {
+      var state:String = "false"
+      val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+      if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
+        state = "true"
+      }
+      result.success(state)
     }else if (call.method == "estadoConexion") {
 
       if(outputStream != null) {
@@ -127,14 +133,14 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
     }else if (call.method == "imprimirTexto") {
 
       var stringllego: String = call.arguments.toString()
-      var lista = stringllego.split("*")
+      //var lista = stringllego.split("*")
       //println("lista ${lista.toString()}")
 
       if(outputStream != null) {
         try{
           var size:Int = 0
           var texto:String = ""
-          var linea = stringllego.split("/")
+          var linea = stringllego.split("//")
           //Log.d(TAG, "lista llego: ${linea.size}")
           if(linea.size>1) {
             size = linea[0].toInt()
@@ -158,12 +164,6 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           result.success("false")
           outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
-          // Log.d(TAG, "state print: ${e.message}")
-          /*var ex:String = e.message.toString()
-          if(ex=="Broken pipe"){
-            Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
-            mensajeToast("Dispositivo fue desconectado, reconecte")
-          }*/
         }
       }else{
         result.success("false")
@@ -242,7 +242,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
     if (bluetoothAdapter?.isEnabled == false) {
       //val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
       //startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-      mensajeToast("Bluetooth off")
+      //mensajeToast("Bluetooth off")
     }
     //buscar bluetooth
     //Log.d(TAG, "buscando dispositivos: ")
