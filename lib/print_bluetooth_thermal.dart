@@ -1,21 +1,39 @@
-
 import 'dart:async';
-
 import 'package:flutter/services.dart';
 
 class PrintBluetoothThermal {
   static const MethodChannel _channel = const MethodChannel('groons.web.app/print');
 
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
+  /*static Future<bool> get bluetoothAvailable async {
+    //bluetooth esta disponible?
+    bool bluetoothState = false;
+    try {
+      bluetoothState = await _channel.invokeMethod('bluetoothavailable');
+      //print("llego: $result");
+    } on PlatformException catch (e) {
+      print("Fallo Bluetooth status: '${e.message}'.");
+    }
+
+    return bluetoothState;
+  }*/
+
+  static Future<bool> get bluetoothEnabled async {
+    //bluetooth esta prendido?
+    bool bluetoothState = false;
+    try {
+      bluetoothState = await _channel.invokeMethod('bluetoothenabled');
+    } on PlatformException catch (e) {
+      print("Fallo Bluetooth status: '${e.message}'.");
+    }
+
+    return bluetoothState;
   }
 
-  static Future<List> get getBluetooths async {
-    //const platform = const MethodChannel('groons.web.app/print');
-    List items = new List();
+  static Future<List> get pairedBluetooths async {
+    //bluetooth vinculados
+    List items = [];
     try {
-      final List result = await _channel.invokeMethod('bluetoothVinculados');
+      final List result = await _channel.invokeMethod('pairedbluetooths');
       //print("llego: $result");
       items = result;
     } on PlatformException catch (e) {
@@ -25,74 +43,89 @@ class PrintBluetoothThermal {
     return items;
   }
 
-  static Future<String> get estadoConexion async {
-
+  static Future<bool> get connectionStatus async {
+    //estado de la conexion eon el bluetooth
     try {
-      final String result = await _channel.invokeMethod('estadoConexion');
+      final bool result = await _channel.invokeMethod('connectionstatus');
       //print("llego: $result");
       return result;
     } on PlatformException catch (e) {
-      print("Failed to write bytes: '${e.message}'.");
-      return "false";
+      print("Failed state conecction: '${e.message}'.");
+      return false;
     }
-
   }
 
-  static Future<String> conectar(String mac) async {
-
-    //const platform = const MethodChannel('groons.web.app/print');
-    String mac_printen = mac;//"66:02:BD:06:18:7B";
-    String result = "false";
+  static Future<bool> connect({required String macPrinterAddress}) async {
+    //conectar impresora bluetooth
+    String mac = macPrinterAddress; //"66:02:BD:06:18:7B";
+    bool result = false;
     try {
-      result = await _channel.invokeMethod('conectarImpresora',mac_printen);
-      //print("llego conexion: $result");
+      result = await _channel.invokeMethod('connect', mac);
+      print("llego conexion: $result");
     } on PlatformException catch (e) {
-      print("Failed to concet: '${e.message}'.");
+      print("Failed to connect: ${e.message}");
     }
     return result;
   }
 
-  static Future<String> writeBytes(List<int> bytes) async {
-
-    //const platform = const MethodChannel('groons.web.app/print');
-
+  static Future<bool> writeBytes(List<int> bytes) async {
+    //enviar bytes a la impresora
     try {
-      final String result = await _channel.invokeMethod('imprimirBytes',bytes);
+      final bool result = await _channel.invokeMethod('writebytes', bytes);
       //print("llego: $result");
       return result;
     } on PlatformException catch (e) {
       print("Failed to write bytes: '${e.message}'.");
-      return "false";
+      return false;
     }
-
   }
 
-  static Future<String> writeText(String text) async {
+  static Future<bool> writeString({required PrintTextSize printText}) async {
+    ///EN: you must send the enter \n to print the complete phrase, it is not sent automatically because you may want to add several
+    /// horizontal values ​​of different size
+    ///ES: se debe enviar el enter \n para que imprima la frase completa, no se envia automatico por que tal vez quiera agregar varios
+    ///valores horizontales de diferente tamaño
+    int size = printText.size <= 5 ? printText.size : 2;
+    String text = printText.text;
 
-    //const platform = const MethodChannel('groons.web.app/print');
-    ///size of 1-5
-    //String text = "5/Impresora térmica ñ \n";
+    String textFinal = "$size///$text";
 
     try {
-      final String result = await _channel.invokeMethod('imprimirTexto',text);
+      final bool result = await _channel.invokeMethod('printstring', textFinal);
       //print("llego: $result");
       return result;
     } on PlatformException catch (e) {
-      print("Failed to writeText: '${e.message}'.");
-      return "false";
+      print("Failed to printsext: '${e.message}'.");
+      return false;
     }
   }
 
-  static Future<int> get getNivelBateria async {
+  static Future<String> get platformVersion async {
+    final String version = await _channel.invokeMethod('getPlatformVersion');
+    return version;
+  }
 
-    //const platform = const MethodChannel('groons.web.app/print');
+  static Future<int> get batteryLevel async {
+    int result = 0;
 
     try {
-      final int result = await _channel.invokeMethod('getBatteryLevel');
+      result = await _channel.invokeMethod('getBatteryLevel');
       //print("llego: $result");
-      return result;
+
     } on PlatformException catch (e) {
       print("Failed to get battery level: '${e.message}'.");
     }
+    return result;
   }
+}
+
+class PrintTextSize {
+  ///min size 1 max 5, if the size is different to the range it will be 2
+  late int size;
+  late String text;
+
+  PrintTextSize({
+    required this.size,
+    required this.text,
+  });
 }

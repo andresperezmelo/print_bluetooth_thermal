@@ -1,3 +1,8 @@
+## [1.0.0]
+
+Shareability with null security was added and all methods were changed to English.
+if you want to migrate to this version you must read the README.md file
+
 ## [0.0.8]
 
 Se cambio el modo de separar el tamaño en texto personalizado por (//) antes (/)

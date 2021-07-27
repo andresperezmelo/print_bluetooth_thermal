@@ -1,14 +1,10 @@
 import 'dart:typed_data';
-
-import 'package:esc_pos_utils/esc_pos_utils.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
-
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
-
-import 'package:image/image.dart' as Imagen;
-import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
+import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
+import 'package:image/image.dart' as Imag;
 
 void main() {
   runApp(MyApp());
@@ -20,7 +16,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _msj = 'Unknown';
+  String _info = "";
+  String _msj = '';
+  bool connected = false;
+  List items = [];
+  List<String> _options = ["test print", "state bluetooth", "connection status", "update info"];
+
+  String _selectSize = "2";
+  final _txtText = TextEditingController(text: "Hello developer");
+  bool _connceting = false;
 
   @override
   void initState() {
@@ -28,96 +32,286 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  bool conceted = false;
-  List items = new List();
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
+          actions: [
+            PopupMenuButton(
+              elevation: 3.2,
+              //initialValue: _options[1],
+              onCanceled: () {
+                print('You have not chossed anything');
+              },
+              tooltip: 'This is tooltip',
+              onSelected: (Object select) async {
+                String sel = select as String;
+                if (sel == "update info") {
+                  initPlatformState();
+                } else if (sel == "connection status") {
+                  final bool result = await PrintBluetoothThermal.connectionStatus;
+                  setState(() {
+                    _info = "connection status: $result";
+                  });
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return _options.map((String option) {
+                  return PopupMenuItem(
+                    value: option,
+                    child: Text(option),
+                  );
+                }).toList();
+              },
+            )
+          ],
+        ),
+        body: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('info: $_info\n '),
+                Text(_msj),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        this.getBluetoots();
+                      },
+                      child: Row(
+                        children: [
+                          Visibility(
+                            visible: _connceting,
+                            child: SizedBox(
+                              width: 25,
+                              height: 25,
+                              child: CircularProgressIndicator(strokeWidth: 1, backgroundColor: Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 5),
+                          Text(_connceting ? "Connecting" : "Search"),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: connected ? this.printTest : null,
+                      child: Text("Test"),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    color: Colors.grey.withOpacity(0.3),
+                  ),
+                  child: ListView.builder(
+                    itemCount: items.length > 0 ? items.length : 0,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        onTap: () {
+                          String select = items[index];
+                          List lista = select.split("#");
+                          //String name = lista[0];
+                          String mac = lista[1];
+                          this.connect(mac);
+                        },
+                        title: Text('${items[index]}'),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    color: Colors.grey.withOpacity(0.3),
+                  ),
+                  child: Column(children: [
+                    Text("Text size without the library without external packets, print images still it should not use a library"),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _txtText,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: "Text",
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        DropdownButton<String>(
+                          hint: Text('Size'),
+                          value: _selectSize,
+                          items: <String>['1', '2', '3', '4', '5'].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: new Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? select) {
+                            setState(() {
+                              _selectSize = select.toString();
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: connected ? this.printWithoutPackage : null,
+                      child: Text("Print"),
+                    ),
+                  ]),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                /*OutlinedButton(
+                  onPressed: conceted ? this.imprimirTicket : null,
+                  child: Text("Imprimir ticket"),
+                ),
+                OutlinedButton(
+                  onPressed: conceted ? this.imprimirTextoPersonalizado : null,
+                  child: Text("Imprimir texto personalizado"),
+                ),
+                OutlinedButton(
+                  onPressed: conceted ? this.imprimirTesh : null,
+                  child: Text("test"),
+                ),
+                OutlinedButton(
+                  onPressed: this.getStatedBluetooth,
+                  child: Text("stated bluetooth"),
+                ),*/
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-  Future<void> getBluetoots()async{
-    final List bluetooths = await PrintBluetoothThermal.getBluetooths;
-    print("impresion $bluetooths");
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    int porcentbatery = 0;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      platformVersion = await PrintBluetoothThermal.platformVersion;
+      porcentbatery = await PrintBluetoothThermal.batteryLevel;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    final bool result = await PrintBluetoothThermal.bluetoothEnabled;
+    print("bluetooth enabled: $result");
+    if (result) {
+      _msj = "Bluetooth enabled, please search and connect";
+    } else {
+      _msj = "Bluetooth not enabled";
+    }
+
     setState(() {
-      items = bluetooths;
+      _info = platformVersion + " ($porcentbatery% bateria)";
     });
   }
 
-  Future<void> setConectar(String mac)async{
-    final String result = await PrintBluetoothThermal.conectar(mac);
+  Future<void> getBluetoots() async {
+    final List listResult = await PrintBluetoothThermal.pairedBluetooths;
+    /*await Future.forEach(listResult, (bluetooth) {
+      String item = bluetooth as String;
+      List<String> lista = item.split("#");
+      String name = lista[0];
+      String mac = lista[1];
+    });*/
+
+    setState(() {
+      items = listResult;
+    });
+  }
+
+  Future<void> connect(String mac) async {
+    setState(() {
+      _connceting = true;
+    });
+    final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
     print("state conected $result");
-    if(result=="true") conceted = true;
+    if (result) connected = true;
     setState(() {
-
+      _connceting = false;
     });
-
   }
 
-  Future<void> imprimirTicket()async{
-    String conexion = await PrintBluetoothThermal.estadoConexion;
-    if(conexion=="true"){
-      Ticket ticket = await reciboPrueba();
-      final result = await PrintBluetoothThermal.writeBytes(ticket.bytes);
+  Future<void> printTest() async {
+    bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
+    if (conexionStatus) {
+      List<int> ticket = await testTicket();
+      final result = await PrintBluetoothThermal.writeBytes(ticket);
       print("impresion $result");
-    }else{
+    } else {
       //no conectado, reconecte
     }
   }
 
-  Future<void> imprimirTesh()async{
-
-    String conexion = await PrintBluetoothThermal.estadoConexion;
-    if(conexion=="true"){
-      String enter= '\n';
-      final result = await PrintBluetoothThermal.writeBytes(enter.codeUnits);
-      print("impresion $result");
+  Future<void> printString() async {
+    bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
+    if (conexionStatus) {
+      String enter = '\n';
+      await PrintBluetoothThermal.writeBytes(enter.codeUnits);
       //size of 1-5
-      String text = "ola";
-      await PrintBluetoothThermal.writeText("$text");
-      await PrintBluetoothThermal.writeText("5/$text") ;
-    }else{
+      String text = "Hello";
+      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text));
+      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: text + " size 2"));
+      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: text + " size 3"));
+    } else {
       //desconectado
-      print("desconectado $conexion");
+      print("desconectado bluetooth $conexionStatus");
     }
   }
 
-  Future<void> imprimirTextoPersonalizado()async{
+  Future<List<int>> testTicket() async {
+    List<int> bytes = [];
+    // Using default profile
+    final profile = await CapabilityProfile.load();
+    final generator = Generator(PaperSize.mm58, profile);
+    //bytes += generator.setGlobalFont(PosFontType.fontA);
+    bytes += generator.reset();
 
-    //doble // para dividir size//texto
-    String conexion = await PrintBluetoothThermal.estadoConexion;
-    if(conexion=="true"){
-      String size1 = "1//Hola \n ";
-      String size2 = "2//Hola \n ";
-      String size3 = "3//Hola \n ";
-      String size4 = "4//Hola \n ";
-      String size5 = "5//Hola \n ";
-      final result1 = await PrintBluetoothThermal.writeText(size1);
-      final result2 = await PrintBluetoothThermal.writeText(size2);
-      final result3 = await PrintBluetoothThermal.writeText(size3);
-      final result4 = await PrintBluetoothThermal.writeText(size4);
-      final result5 = await PrintBluetoothThermal.writeText(size5);
-      print("finalizo impresion");
-    }else{
-      //no conectado, reconecte
-      print("no conectado");
-    }
-  }
+    final ByteData data = await rootBundle.load('assets/mylogo.jpg');
+    final Uint8List bytesImg = data.buffer.asUint8List();
+    final image = Imag.decodeImage(bytesImg);
+    // Using `ESC *`
+    bytes += generator.image(image!);
 
-  Future<Ticket> reciboPrueba()async{
+    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ', styles: PosStyles());
+    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text(
+      'Special 2: blåbærgrød',
+      styles: PosStyles(codeTable: 'CP1252'),
+    );
 
-    CapabilityProfile profile = await CapabilityProfile.load();
-    final Ticket ticket = Ticket(PaperSize.mm58, profile);
+    bytes += generator.text('Bold text', styles: PosStyles(bold: true));
+    bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
+    bytes += generator.text('Underlined text', styles: PosStyles(underline: true), linesAfter: 1);
+    bytes += generator.text('Align left', styles: PosStyles(align: PosAlign.left));
+    bytes += generator.text('Align center', styles: PosStyles(align: PosAlign.center));
+    bytes += generator.text('Align right', styles: PosStyles(align: PosAlign.right), linesAfter: 1);
 
-    ticket.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    ticket.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
-    ticket.text('Special 2: blåbærgrød', styles: PosStyles(codeTable: 'CP1252'));
-    ticket.text('Special 3: Impresora térmica ñ', styles: PosStyles(codeTable: 'CP1252'));
-
-    ticket.text('Bold text', styles: PosStyles(bold: true));
-    ticket.text('Reverse text', styles: PosStyles(reverse: true));
-    ticket.text('Underlined text',
-        styles: PosStyles(underline: true), linesAfter: 1);
-    ticket.text('Align left', styles: PosStyles(align: PosAlign.left));
-    ticket.text('Align center', styles: PosStyles(align: PosAlign.center));
-    ticket.text('Align right', styles: PosStyles(align: PosAlign.right), linesAfter: 1);
-
-    ticket.row([
+    bytes += generator.row([
       PosColumn(
         text: 'col3',
         width: 3,
@@ -135,139 +329,54 @@ class _MyAppState extends State<MyApp> {
       ),
     ]);
 
-    ticket.text('Text size 200%', styles: PosStyles(
-      height: PosTextSize.size2,
-      width: PosTextSize.size2,
-    ));
-
-    // Print image:
-    final ByteData data = await rootBundle.load('assets/logo.png');
-    final Uint8List bytes = data.buffer.asUint8List();
-    final Imagen.Image imagen = Imagen.decodeImage(bytes);
-    ticket.image(imagen);
-    // Print image using an alternative (obsolette) command
-    // ticket.imageRaster(image);
-
-    // Print barcode
+    //barcode
     final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
-    ticket.barcode(Barcode.upcA(barData));
+    bytes += generator.barcode(Barcode.upcA(barData));
 
-    // Print mixed (chinese + latin) text. Only for printers supporting Kanji mode
-    // ticket.text(
-    //   'hello ! 中文字 # world @ éphémère &',
-    //   styles: PosStyles(codeTable: PosCodeTable.westEur),
-    //   containsChinese: true,
-    // );
+    //QR code
+    bytes += generator.qrcode('example.com');
 
-    //ticket.feed(2);
-
-    ticket.cut();
-
-    return ticket;
-  }
-
-  Future<void> getStatedConection()async{
-
-    final String result = await PrintBluetoothThermal.estadoConexion;
-    print("state conected $result");
-    setState(() {
-      _msj = "Sin impresora conectada";
-    });
-
-  }
-
-  Future<void> getStatedBluetooth()async{
-
-    final String result = await PrintBluetoothThermal.getBluetoothState;
-    print("state conected $result");
-    setState(() {
-      _msj = "Bluetooth $result";
-    });
-
-  }
-
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    int porcentbatery;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await PrintBluetoothThermal.platformVersion;
-      porcentbatery = await PrintBluetoothThermal.getNivelBateria;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _msj = platformVersion+" ($porcentbatery% bateria)";
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Container(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('state: $_msj\n '),
-              Text("Buscar bluetooth vinculados"),
-              OutlineButton(
-                onPressed: (){
-                  this.getBluetoots();
-                },
-                child: Text("Buscar"),
-              ),
-              Container(
-                height: 200,
-                child: ListView.builder(
-                  itemCount: items.length>0?items.length:0,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      onTap: (){
-                        String select = items[index];
-                        List lista = select.split("#");
-                        String name = lista[0];
-                        String mac = lista[1];
-                        this.setConectar(mac);
-                      },
-                      title: Text('${items[index]}'),
-                    );
-                  },
-                ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              OutlineButton(
-                onPressed: conceted? this.imprimirTicket:null,
-                child: Text("Imprimir ticket"),
-              ),
-              OutlineButton(
-                onPressed: conceted?this.imprimirTextoPersonalizado:null,
-                child: Text("Imprimir texto personalizado"),
-              ),
-              OutlineButton(
-                onPressed: conceted?this.imprimirTesh:null,
-                child: Text("test"),
-              ),
-              OutlineButton(
-                onPressed: this.getStatedBluetooth,
-                child: Text("stated bluetooth"),
-              ),
-            ],
-          ),
-        ),
+    bytes += generator.text(
+      'Text size 50%',
+      styles: PosStyles(
+        fontType: PosFontType.fontB,
       ),
     );
+    bytes += generator.text(
+      'Text size 100%',
+      styles: PosStyles(
+        fontType: PosFontType.fontA,
+      ),
+    );
+    bytes += generator.text(
+      'Text size 200%',
+      styles: PosStyles(
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+      ),
+    );
+
+    bytes += generator.feed(2);
+    //bytes += generator.cut();
+    return bytes;
+  }
+
+  Future<void> printWithoutPackage() async {
+    //impresion sin paquete solo de PrintBluetoothTermal
+    bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
+    if (connectionStatus) {
+      String text = _txtText.text.toString() + "\n";
+      bool result = await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: int.parse(_selectSize), text: text));
+      print("status print result: $result");
+      setState(() {
+        _msj = "printed status: $result";
+      });
+    } else {
+      //no conectado, reconecte
+      setState(() {
+        _msj = "no connected device";
+      });
+      print("no conectado");
+    }
   }
 }

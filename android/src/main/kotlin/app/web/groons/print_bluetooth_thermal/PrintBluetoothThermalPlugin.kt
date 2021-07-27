@@ -38,7 +38,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   /// when the Flutter Engine is detached from the Activity
   private lateinit var mContext: Context
   private lateinit var channel : MethodChannel
-  private lateinit var state:String
+  private var state:Boolean = false
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "groons.web.app/print")
@@ -56,53 +56,55 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       } else {
         result.error("UNAVAILABLE", "Battery level not available.", null)
       }
-    }else if (call.method == "estadoBluetooth") {
-      var state:String = "false"
+    }else if (call.method == "bluetoothenabled") {
+      var state:Boolean = false
       val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
       if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
-        state = "true"
+        state = true
       }
       result.success(state)
-    }else if (call.method == "estadoConexion") {
-
+    }else if (call.method == "connectionstatus") {
       if(outputStream != null) {
         try{
           outputStream?.run {
             write(" ".toByteArray())
-            result.success("true")
+            result.success(true)
             //Log.d(TAG, "paso yes coexion ")
           }
         }catch (e: Exception){
-          result.success("false")
+          result.success(false)
           outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
           //Log.d(TAG, "state print: ${e.message}")
         }
       }else{
-        result.success("false")
+        result.success(false)
         //Log.d(TAG, "no paso es false ")
       }
-
-    } else if (call.method == "conectarImpresora") {
+    } else if (call.method == "connect") {
       var macimpresora = call.arguments.toString();
+       //Log.d(TAG, "coneccting kt: mac: "+macimpresora)
       if(macimpresora.length>0){
         mac = macimpresora;
       }else{
-        result.success("false")
+        result.success(false)
       }
       GlobalScope.launch(Dispatchers.Main) {
         if(outputStream == null) {
           outputStream = connect()?.also {
+            Log.d(TAG, "conectado kt")
             //result.success("true")
             //Toast.makeText(this@MainActivity, "Impresora conectada", Toast.LENGTH_SHORT).show()
           }.apply {
             result.success(state)
-            //Log.d(TAG, "finalizo: conexion state:$state")
+            Log.d(TAG, "finalizo tk: conexion state:$state")
           }
+        }else{
+          Log.d(TAG, "stream null kt: ")
+          result.success(false)
         }
       }
-    }else if (call.method == "imprimirBytes") {
-
+    }else if (call.method == "writebytes") {
       var lista: List<Int> = call.arguments as List<Int>
       var bytes: ByteArray = "\n".toByteArray()
 
@@ -113,10 +115,10 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         try{
           outputStream?.run {
             write(bytes)
-            result.success("true")
+            result.success(true)
           }
         }catch (e: Exception){
-          result.success("false")
+          result.success(false)
           outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
           // Log.d(TAG, "state print: ${e.message}")
@@ -127,21 +129,18 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           }*/
         }
       }else{
-        result.success("false")
+        result.success(false)
       }
-
-    }else if (call.method == "imprimirTexto") {
-
+    }else if (call.method == "printstring") {
       var stringllego: String = call.arguments.toString()
       //var lista = stringllego.split("*")
       //println("lista ${lista.toString()}")
-
       if(outputStream != null) {
         try{
           var size:Int = 0
           var texto:String = ""
-          var linea = stringllego.split("//")
-          //Log.d(TAG, "lista llego: ${linea.size}")
+          var linea = stringllego.split("///")
+          Log.d(TAG, "lista llego: ${linea.size}")
           if(linea.size>1) {
             size = linea[0].toInt()
             texto = linea[1]
@@ -152,16 +151,20 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
             //Log.d(TAG, "lista llego 2 texto: ${texto} size: $size")
           }
 
+          //Log.d(TAG, "print text kt: ${texto} size: $size")
+          val charset = Charsets.UTF_8
+          val byteArray = texto.toByteArray(charset)
+
           outputStream?.run {
             write(setBytes.size[0])
             write(setBytes.cancelar_chino)
             write(setBytes.caracteres_escape)
             write(setBytes.size[size])
-            write(texto.toByteArray(charset("iso-8859-1")))
-            result.success("true")
+            write(texto.toByteArray(charset("ISO-8859-1")))
+            result.success(true)
           }
         }catch (e: Exception){
-          result.success("false")
+          result.success(false)
           outputStream = null
           mensajeToast("Dispositivo fue desconectado, reconecte")
         }
@@ -169,8 +172,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         result.success("false")
       }
 
-    }else if (call.method == "bluetoothVinculados") {
-
+    }else if (call.method == "pairedbluetooths") {
       var lista:List<String> = dispositivosVinculados()
 
       result.success(lista)
@@ -194,7 +196,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   }
 
   private suspend fun connect(): OutputStream? {
-    state = "false"
+    state = false
     return withContext(Dispatchers.IO) {
       var outputStream: OutputStream? = null
       val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -209,21 +211,21 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           bluetoothSocket?.connect()
           if (bluetoothSocket!!.isConnected) {
             outputStream = bluetoothSocket!!.outputStream
-            state = "true"
+            state = true
             //outputStream.write("\n".toByteArray())
           }else{
-            state = "false"
+            state = false
             Log.d(TAG, "Desconectado: ")
           }
           //bluetoothSocket?.close()
         } catch (e: Exception){
-          state = "false"
+          state = false
           var code:Int = e.hashCode() //1535159 apagado //
           Log.d(TAG, "connect: ${e.message} code $code")
           outputStream?.close()
         }
       }else{
-        state = "false"
+        state = false
         Log.d(TAG, "Priblema adapter: ")
       }
       outputStream
