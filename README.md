@@ -26,7 +26,6 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 PrintBluetoothThermal
 ```
 
-<br/>
 
 # Available functions
 
@@ -41,7 +40,7 @@ PrintBluetoothThermal
 | PrintBluetoothThermal.platformVersion | gets the android version where it is running, returns String |
 | PrintBluetoothThermal.batteryLevel | get the percentage of the battery returns int |
 
-<br/>
+
 
 # Examples
 
@@ -51,16 +50,14 @@ final bool result = await PrintBluetoothThermal.bluetoothEnabled;
 ```
 
 **read paired bluetooth**
-<br/>
+
 _read the bluetooth linked to the phone, to be able to connect to the printer it must have been previously linked in phone settings bluetooth option_
 ```dart
-final List listResult = await PrintBluetoothThermal.pairedBluetooths;
-  await Future.forEach(listResult, (bluetooth) {
-    String item = bluetooth as String;
-    List<String> lista = item.split("#");
-    String name = lista[0];
-    String mac = lista[1];
-  });
+final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
+await Future.forEach(listResult, (BluetoothInfo bluetooth) {
+  String name = bluetooth.name;
+  String mac = bluetooth.macAdress;
+});
 ```
 
 **Connect printer**
@@ -187,9 +184,11 @@ Future<List<int>> testTicket() async {
 ```
 
 # Screenshot of the example app, you can copy the code from the example
-![Screenshot](appview.jpeg)
+![App example](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.png)
+# Ticket printed with various sizes
+![Print sizes](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/size.jpeg)
 # Ticket printed with various forms
-![Screenshot](print.jpeg)
+![Use package print_bluetooth_thermal](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print.jpeg)
 
 
 # Built with 🛠️
