@@ -1,22 +1,32 @@
 package app.web.groons.print_bluetooth_thermal
 
+import android.Manifest
 import android.app.Activity
+import android.app.Activity.RESULT_OK
+import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.NonNull
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -25,7 +35,7 @@ import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import java.util.*
 
-private const val TAG = "====> mio: "
+private const val TAG = "====> print: "
 private var outputStream: OutputStream? = null
 private lateinit var mac: String
 //val REQUEST_ENABLE_BT = 2
@@ -40,6 +50,12 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   private lateinit var channel : MethodChannel
   private var state:Boolean = false
 
+  //val pluginActivity: Activity = activity
+  //private val application: Application = activity.application
+  private val myPermissionCode = 34264
+  private var activeResult: Result? = null
+  private var permissionGranted: Boolean = false
+
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "groons.web.app/print")
     channel.setMethodCallHandler(this)
@@ -47,7 +63,15 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-    if (call.method == "getPlatformVersion") {
+
+    activeResult = result
+    permissionGranted = ContextCompat.checkSelfPermission(mContext,Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+    if(call.method == "ispermissionbluetoothgranted"){
+      result.success(permissionGranted)
+    }else if ( !permissionGranted && android.os.Build.VERSION.RELEASE.toInt() >= 12) {
+      Log.i("warning","permission bluetooth granted is false, check in settings that the permission of nearby devices is activated")
+      return;
+    }else if (call.method == "getPlatformVersion") {
       result.success("Android ${android.os.Build.VERSION.RELEASE}")
     }else if (call.method == "getBatteryLevel") {
       val batteryLevel = getBatteryLevel()
@@ -83,7 +107,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       }
     } else if (call.method == "connect") {
       var macimpresora = call.arguments.toString();
-       //Log.d(TAG, "coneccting kt: mac: "+macimpresora)
+       //Log.d(TAG, "coneccting kt: mac: "+macimpresora);
       if(macimpresora.length>0){
         mac = macimpresora;
       }else{
@@ -92,7 +116,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       GlobalScope.launch(Dispatchers.Main) {
         if(outputStream == null) {
           outputStream = connect()?.also {
-            Log.d(TAG, "conectado kt")
+            //Log.d(TAG, "connected kt")
             //result.success("true")
             //Toast.makeText(this@MainActivity, "Impresora conectada", Toast.LENGTH_SHORT).show()
           }.apply {
@@ -101,6 +125,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           }
         }else{
           Log.d(TAG, "stream null kt: ")
+          outputStream == null;
           result.success(false)
         }
       }
@@ -140,7 +165,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           var size:Int = 0
           var texto:String = ""
           var linea = stringllego.split("///")
-          Log.d(TAG, "lista llego: ${linea.size}")
+          //Log.d(TAG, "lista llego: ${linea.size}")
           if(linea.size>1) {
             size = linea[0].toInt()
             texto = linea[1]
@@ -171,12 +196,45 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       }else{
         result.success("false")
       }
+    }else if (call.method == "writebytesChinese") { 
+      var lista: List<Int> = call.arguments as List<Int>
+      var bytes: ByteArray = "\n".toByteArray()
 
+      lista.forEach {
+        bytes += it.toByte() //Log.d(TAG, "foreah: ${it}")
+      }
+      if(outputStream != null) {
+        try{
+          outputStream?.run {
+            write(bytes)
+            result.success(true)
+          }
+        }catch (e: Exception){
+          result.success(false)
+          outputStream = null
+          mensajeToast("Dispositivo fue desconectado, reconecte")
+          // Log.d(TAG, "state print: ${e.message}")
+          /*var ex:String = e.message.toString()
+          if(ex=="Broken pipe"){
+            Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
+            mensajeToast("Dispositivo fue desconectado, reconecte")
+          }*/
+        }
+      }else{
+        result.success(false)
+      }
     }else if (call.method == "pairedbluetooths") {
       var lista:List<String> = dispositivosVinculados()
 
       result.success(lista)
-
+    }else if(call.method == "disconnect"){
+      if(outputStream != null){
+        outputStream?.close()
+        outputStream = null
+        result.success(true);
+      }else{
+        result.success(true);
+      }
     }else {
       result.notImplemented()
     }
@@ -226,10 +284,14 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         }
       }else{
         state = false
-        Log.d(TAG, "Priblema adapter: ")
+        Log.d(TAG, "Problema adapter: ")
       }
       outputStream
     }
+  }
+
+  private fun disconncet(){
+    outputStream?.close()
   }
 
   private fun dispositivosVinculados():List<String>{
@@ -328,4 +390,6 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
+
+
 }
