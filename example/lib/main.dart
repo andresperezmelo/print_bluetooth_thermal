@@ -19,8 +19,8 @@ class _MyAppState extends State<MyApp> {
   String _info = "";
   String _msj = '';
   bool connected = false;
-  List items = [];
-  List<String> _options = ["test print", "state bluetooth", "connection status", "update info"];
+  List<BluetoothInfo> items = [];
+  List<String> _options = ["permission bluetooth granted", "bluetooth enabled", "connection status", "update info"];
 
   String _selectSize = "2";
   final _txtText = TextEditingController(text: "Hello developer");
@@ -45,10 +45,21 @@ class _MyAppState extends State<MyApp> {
               onCanceled: () {
                 print('You have not chossed anything');
               },
-              tooltip: 'This is tooltip',
+              tooltip: 'Menu',
               onSelected: (Object select) async {
                 String sel = select as String;
-                if (sel == "update info") {
+                print("selected: $sel");
+                if (sel == "permission bluetooth granted") {
+                  bool status = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+                  setState(() {
+                    _info = "permission bluetooth granted: $status";
+                  });
+                } else if (sel == "bluetooth enabled") {
+                  bool state = await PrintBluetoothThermal.bluetoothEnabled;
+                  setState(() {
+                    _info = "Bluetooth enabled: $state";
+                  });
+                } else if (sel == "update info") {
                   initPlatformState();
                 } else if (sel == "connection status") {
                   final bool result = await PrintBluetoothThermal.connectionStatus;
@@ -100,33 +111,34 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                     ElevatedButton(
+                      onPressed: connected ? this.disconnect : null,
+                      child: Text("Disconnect"),
+                    ),
+                    ElevatedButton(
                       onPressed: connected ? this.printTest : null,
                       child: Text("Test"),
                     ),
                   ],
                 ),
                 Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: Colors.grey.withOpacity(0.3),
-                  ),
-                  child: ListView.builder(
-                    itemCount: items.length > 0 ? items.length : 0,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        onTap: () {
-                          String select = items[index];
-                          List lista = select.split("#");
-                          //String name = lista[0];
-                          String mac = lista[1];
-                          this.connect(mac);
-                        },
-                        title: Text('${items[index]}'),
-                      );
-                    },
-                  ),
-                ),
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                    child: ListView.builder(
+                      itemCount: items.length > 0 ? items.length : 0,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          onTap: () {
+                            String mac = items[index].macAdress;
+                            this.connect(mac);
+                          },
+                          title: Text('Name: ${items[index].name}'),
+                          subtitle: Text("macAdress: ${items[index].macAdress}"),
+                        );
+                      },
+                    )),
                 SizedBox(
                   height: 10,
                 ),
@@ -218,7 +230,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     final bool result = await PrintBluetoothThermal.bluetoothEnabled;
-    print("bluetooth enabled: $result");
+    //print("bluetooth enabled: $result");
     if (result) {
       _msj = "Bluetooth enabled, please search and connect";
     } else {
@@ -226,18 +238,23 @@ class _MyAppState extends State<MyApp> {
     }
 
     setState(() {
-      _info = platformVersion + " ($porcentbatery% bateria)";
+      _info = platformVersion + " ($porcentbatery% battery)";
     });
   }
 
   Future<void> getBluetoots() async {
-    final List listResult = await PrintBluetoothThermal.pairedBluetooths;
-    /*await Future.forEach(listResult, (bluetooth) {
-      String item = bluetooth as String;
-      List<String> lista = item.split("#");
-      String name = lista[0];
-      String mac = lista[1];
+    final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
+
+    /*await Future.forEach(listResult, (BluetoothInfo bluetooth) {
+      String name = bluetooth.name;
+      String mac = bluetooth.macAdress;
     });*/
+
+    if (listResult.length == 0) {
+      _msj = "There are no bluetoohs linked, go to settings and link the printer";
+    } else {
+      _msj = "Touch an item in the list to connect";
+    }
 
     setState(() {
       items = listResult;
@@ -254,6 +271,14 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _connceting = false;
     });
+  }
+
+  Future<void> disconnect() async {
+    final bool status = await PrintBluetoothThermal.disconnect;
+    setState(() {
+      connected = false;
+    });
+    print("status disconnect $status");
   }
 
   Future<void> printTest() async {
