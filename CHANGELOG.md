@@ -1,3 +1,19 @@
+## [1.0.3]
+
+1. Added support for android 12
+2. Added BLUETOOTH_CONNECT permission for android 12 onwards
+3. Added isPermissionBluetoothGranted function to detect if permission is enabled, works only on android 12 and up
+4. Changed Kotlin from 1.3.50 to 1.6.10
+
+## [1.0.2]
+
+Added a method to disconnect the printer
+
+## [1.0.1]
+
+Shareability with null security was added and all methods were changed to English.
+if you want to migrate to this version you must read the README.md file
+
 ## [1.0.0]
 
 Shareability with null security was added and all methods were changed to English.

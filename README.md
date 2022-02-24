@@ -13,7 +13,6 @@ blocks apps that don't explain what to use location permission for.
 
 * If you want to print images, qr code, barcode use the package [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
 
-<br/>
 
 1. Import the package
 
@@ -31,12 +30,14 @@ PrintBluetoothThermal
 
 | Comando | Descripción |
 | --- | --- |
+| PrintBluetoothThermal.isPermissionBluetoothGranted | returns true if the BLUETOOTH_CONNECT permission is enabled, it is only required from android 12 onwards |
 | PrintBluetoothThermal.bluetoothEnabled | returns true if bluetooth is on |
 | PrintBluetoothThermal.pairedBluetooths | retronates all paired bluetooth on the device |
 | PrintBluetoothThermal.connectionStatus | returns true if you are currently connected to the printer |
 | PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent |
 | PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
 | PrintBluetoothThermal.writeString | Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%) |
+|  PrintBluetoothThermal.disconnect | disconnect print |
 | PrintBluetoothThermal.platformVersion | gets the android version where it is running, returns String |
 | PrintBluetoothThermal.batteryLevel | get the percentage of the battery returns int |
 
@@ -45,13 +46,15 @@ PrintBluetoothThermal
 # Examples
 
 **Detect if bluetooth is turned on**
+
+_See if bluetooth is on_
 ```dart
 final bool result = await PrintBluetoothThermal.bluetoothEnabled;
 ```
 
-**read paired bluetooth**
+**Read paired bluetooth**
 
-_read the bluetooth linked to the phone, to be able to connect to the printer it must have been previously linked in phone settings bluetooth option_
+_Read the bluetooth linked to the phone, to be able to connect to the printer it must have been previously linked in phone settings bluetooth option_
 ```dart
 final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
 await Future.forEach(listResult, (BluetoothInfo bluetooth) {
@@ -66,12 +69,20 @@ String mac = "66:02:BD:06:18:7B";
 final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
 ```
 
-**Detect if connection status**
+**Disonnect printer**
 ```dart
-final bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
+final bool result = await PrintBluetoothThermal.disconnect;
+```
+
+**Detect if connection status**
+
+_The connection is maintained by a Kotlin Corroutine and the printer will not disconnect even if you move it far away_
+```dart
+final bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
 ```
 
 **Print text of different sizes**
+
 ```dart
  bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
   if (conexionStatus) {
@@ -90,7 +101,7 @@ final bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
 ```
 
 **Print on the printer with the package** [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
-<br/>
+
 _call PrintTest()_
 ```dart
 Future<void> printTest() async {
@@ -184,7 +195,7 @@ Future<List<int>> testTicket() async {
 ```
 
 # Screenshot of the example app, you can copy the code from the example
-![App example](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.png)
+![App example](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.jpeg)
 # Ticket printed with various sizes
 ![Print sizes](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/size.jpeg)
 # Ticket printed with various forms
