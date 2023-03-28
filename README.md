@@ -35,7 +35,7 @@ PrintBluetoothThermal
 | PrintBluetoothThermal.pairedBluetooths | retronates all paired bluetooth on the device |
 | PrintBluetoothThermal.connectionStatus | returns true if you are currently connected to the printer |
 | PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent |
-| PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
+| PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successful |
 | PrintBluetoothThermal.writeString | Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%) |
 |  PrintBluetoothThermal.disconnect | disconnect print |
 | PrintBluetoothThermal.platformVersion | gets the android version where it is running, returns String |
