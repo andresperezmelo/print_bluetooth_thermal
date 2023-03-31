@@ -64,15 +64,38 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
 
+    var sdkversion:Int = Build.VERSION.SDK_INT;
+    var androidVersion:String = android.os.Build.VERSION.RELEASE;
     activeResult = result
     permissionGranted = ContextCompat.checkSelfPermission(mContext,Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
     if(call.method == "ispermissionbluetoothgranted"){
-      result.success(permissionGranted)
-    }else if ( !permissionGranted && android.os.Build.VERSION.RELEASE.toInt() >= 12) {
+      var permission: Boolean = true;
+      if(sdkversion >= 31){
+        permission = permissionGranted;
+      }
+      //solicitar el permiso si no esta consedido
+      if(!permission){
+        val REQUEST_BLUETOOTH_CONNECT = 1
+        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+           ActivityCompat.requestPermissions(mContext, arrayOf(Manifest.permission.BLUETOOTH), REQUEST_BLUETOOTH_CONNECT)
+        }*/
+        /*val activity = registrar?.activity()
+        if (activity != null) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
+            }
+            mensajeToast("Aceptar el permiso")
+        }else{
+          mensajeToast("No hay activity")
+        }*/
+      }
+
+      result.success(permission)
+    }else if ( !permissionGranted && sdkversion >= 31) {
       Log.i("warning","permission bluetooth granted is false, check in settings that the permission of nearby devices is activated")
       return;
     }else if (call.method == "getPlatformVersion") {
-      result.success("Android ${android.os.Build.VERSION.RELEASE}")
+      result.success("Android $androidVersion")
     }else if (call.method == "getBatteryLevel") {
       val batteryLevel = getBatteryLevel()
       if (batteryLevel != -1) {
@@ -98,7 +121,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         }catch (e: Exception){
           result.success(false)
           outputStream = null
-          mensajeToast("Dispositivo fue desconectado, reconecte")
+          //mensajeToast("Dispositivo fue desconectado, reconecte")
           //Log.d(TAG, "state print: ${e.message}")
         }
       }else{
@@ -121,10 +144,10 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
             //Toast.makeText(this@MainActivity, "Impresora conectada", Toast.LENGTH_SHORT).show()
           }.apply {
             result.success(state)
-            Log.d(TAG, "finalizo tk: conexion state:$state")
+            //Log.d(TAG, "finalizo tk: conexion state:$state")
           }
         }else{
-          Log.d(TAG, "stream null kt: ")
+          //Log.d(TAG, "stream null kt: ")
           outputStream == null;
           result.success(false)
         }
@@ -145,7 +168,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         }catch (e: Exception){
           result.success(false)
           outputStream = null
-          mensajeToast("Dispositivo fue desconectado, reconecte")
+          //mensajeToast("Dispositivo fue desconectado, reconecte")
           // Log.d(TAG, "state print: ${e.message}")
           /*var ex:String = e.message.toString()
           if(ex=="Broken pipe"){
@@ -191,7 +214,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         }catch (e: Exception){
           result.success(false)
           outputStream = null
-          mensajeToast("Dispositivo fue desconectado, reconecte")
+          //mensajeToast("Dispositivo fue desconectado, reconecte")
         }
       }else{
         result.success("false")
@@ -212,7 +235,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
         }catch (e: Exception){
           result.success(false)
           outputStream = null
-          mensajeToast("Dispositivo fue desconectado, reconecte")
+          //mensajeToast("Dispositivo fue desconectado, reconecte")
           // Log.d(TAG, "state print: ${e.message}")
           /*var ex:String = e.message.toString()
           if(ex=="Broken pipe"){
