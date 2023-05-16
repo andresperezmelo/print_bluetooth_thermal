@@ -5,9 +5,9 @@
 Pod::Spec.new do |s|
   s.name             = 'print_bluetooth_thermal'
   s.version          = '0.0.1'
-  s.summary          = 'Impresion de android '
+  s.summary          = 'Impresion de IOS '
   s.description      = <<-DESC
-Impresion de android 
+Impresion de IOS 
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
