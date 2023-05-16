@@ -1,0 +1,15 @@
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/icudtl.dat
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/flutter_windows.dll
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/print_bluetooth_thermal_plugin.dll
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/AssetManifest.json
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/assets/corazon.png
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/assets/logo.png
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/assets/logop.png
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/assets/mylogo.jpg
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/FontManifest.json
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/fonts/MaterialIcons-Regular.otf
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/kernel_blob.bin
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/NOTICES.Z
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/packages/esc_pos_utils_plus/resources/capabilities.json
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/Debug/data/flutter_assets/shaders/ink_sparkle.frag

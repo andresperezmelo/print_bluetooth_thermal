@@ -1,0 +1,10 @@
+^C:\USERS\ANDRE\DESKTOP\PRINT_BLUETOOTH_THERMAL\EXAMPLE\BUILD\WINDOWS\CMAKEFILES\089AAC0ED119E19E9F57FA9362257FCE\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/andre/Desktop/print_bluetooth_thermal/example/windows -BC:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/print_bluetooth_thermal_example.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

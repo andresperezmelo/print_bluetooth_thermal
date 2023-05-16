@@ -146,6 +146,7 @@ class _MyAppState extends State<MyApp> {
                 ),
                 Container(
                     height: 200,
+                    margin: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                       color: Colors.grey.withOpacity(0.3),
@@ -202,6 +203,7 @@ class _MyAppState extends State<MyApp> {
                         )
                       ],
                     ),
+                    const SizedBox(height: 5),
                     ElevatedButton(
                       onPressed: connected ? this.printWithoutPackage : null,
                       child: Text("Print"),

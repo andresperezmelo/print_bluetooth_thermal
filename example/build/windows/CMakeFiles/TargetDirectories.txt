@@ -1,0 +1,13 @@
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/CMakeFiles/INSTALL.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/CMakeFiles/ALL_BUILD.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/CMakeFiles/ZERO_CHECK.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/flutter/CMakeFiles/flutter_wrapper_plugin.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/flutter/CMakeFiles/flutter_wrapper_app.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/flutter/CMakeFiles/flutter_assemble.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/flutter/CMakeFiles/INSTALL.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/CMakeFiles/INSTALL.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/CMakeFiles/print_bluetooth_thermal_example.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/runner/CMakeFiles/ALL_BUILD.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/plugins/print_bluetooth_thermal/CMakeFiles/print_bluetooth_thermal_plugin.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/plugins/print_bluetooth_thermal/CMakeFiles/INSTALL.dir
+C:/Users/andre/Desktop/print_bluetooth_thermal/example/build/windows/plugins/print_bluetooth_thermal/CMakeFiles/ALL_BUILD.dir
