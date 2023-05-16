@@ -1,10 +1,10 @@
-import 'dart:typed_data';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
-import 'package:image/image.dart' as Imag;
+import 'package:image/image.dart' as img;
 
 void main() {
   runApp(MyApp());
@@ -24,7 +24,11 @@ class _MyAppState extends State<MyApp> {
 
   String _selectSize = "2";
   final _txtText = TextEditingController(text: "Hello developer");
-  bool _connceting = false;
+  bool _progress = false;
+  String _msjprogress = "";
+
+  String optionprinttype = "58 mm";
+  List<String> options = ["58 mm", "80 mm"];
 
   @override
   void initState() {
@@ -48,12 +52,12 @@ class _MyAppState extends State<MyApp> {
               tooltip: 'Menu',
               onSelected: (Object select) async {
                 String sel = select as String;
-                print("selected: $sel");
                 if (sel == "permission bluetooth granted") {
                   bool status = await PrintBluetoothThermal.isPermissionBluetoothGranted;
                   setState(() {
                     _info = "permission bluetooth granted: $status";
                   });
+                  //open setting permision if not granted permision
                 } else if (sel == "bluetooth enabled") {
                   bool state = await PrintBluetoothThermal.bluetoothEnabled;
                   setState(() {
@@ -89,6 +93,26 @@ class _MyAppState extends State<MyApp> {
                 Text('info: $_info\n '),
                 Text(_msj),
                 Row(
+                  children: [
+                    Text("Type print"),
+                    SizedBox(width: 10),
+                    DropdownButton<String>(
+                      value: optionprinttype,
+                      items: options.map((String option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Text(option),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          optionprinttype = newValue!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     ElevatedButton(
@@ -98,15 +122,15 @@ class _MyAppState extends State<MyApp> {
                       child: Row(
                         children: [
                           Visibility(
-                            visible: _connceting,
+                            visible: _progress,
                             child: SizedBox(
                               width: 25,
                               height: 25,
-                              child: CircularProgressIndicator(strokeWidth: 1, backgroundColor: Colors.white),
+                              child: CircularProgressIndicator.adaptive(strokeWidth: 1, backgroundColor: Colors.white),
                             ),
                           ),
                           SizedBox(width: 5),
-                          Text(_connceting ? "Connecting" : "Search"),
+                          Text(_progress ? _msjprogress : "Search"),
                         ],
                       ),
                     ),
@@ -135,13 +159,11 @@ class _MyAppState extends State<MyApp> {
                             this.connect(mac);
                           },
                           title: Text('Name: ${items[index].name}'),
-                          subtitle: Text("macAdress: ${items[index].macAdress}"),
+                          subtitle: Text("macAddress: ${items[index].macAdress}"),
                         );
                       },
                     )),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -186,25 +208,7 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ]),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                /*OutlinedButton(
-                  onPressed: conceted ? this.imprimirTicket : null,
-                  child: Text("Imprimir ticket"),
-                ),
-                OutlinedButton(
-                  onPressed: conceted ? this.imprimirTextoPersonalizado : null,
-                  child: Text("Imprimir texto personalizado"),
-                ),
-                OutlinedButton(
-                  onPressed: conceted ? this.imprimirTesh : null,
-                  child: Text("test"),
-                ),
-                OutlinedButton(
-                  onPressed: this.getStatedBluetooth,
-                  child: Text("stated bluetooth"),
-                ),*/
+                SizedBox(height: 10),
               ],
             ),
           ),
@@ -219,6 +223,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await PrintBluetoothThermal.platformVersion;
+      print("patformversion: $platformVersion");
       porcentbatery = await PrintBluetoothThermal.batteryLevel;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
@@ -230,7 +235,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     final bool result = await PrintBluetoothThermal.bluetoothEnabled;
-    //print("bluetooth enabled: $result");
+    print("bluetooth enabled: $result");
     if (result) {
       _msj = "Bluetooth enabled, please search and connect";
     } else {
@@ -243,12 +248,21 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> getBluetoots() async {
+    setState(() {
+      _progress = true;
+      _msjprogress = "Wait";
+      items = [];
+    });
     final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
 
     /*await Future.forEach(listResult, (BluetoothInfo bluetooth) {
       String name = bluetooth.name;
       String mac = bluetooth.macAdress;
     });*/
+
+    setState(() {
+      _progress = false;
+    });
 
     if (listResult.length == 0) {
       _msj = "There are no bluetoohs linked, go to settings and link the printer";
@@ -263,13 +277,15 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> connect(String mac) async {
     setState(() {
-      _connceting = true;
+      _progress = true;
+      _msjprogress = "Connecting...";
+      connected = false;
     });
     final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
     print("state conected $result");
     if (result) connected = true;
     setState(() {
-      _connceting = false;
+      _progress = false;
     });
   }
 
@@ -283,10 +299,11 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> printTest() async {
     bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
+    //print("connection status: $conexionStatus");
     if (conexionStatus) {
       List<int> ticket = await testTicket();
       final result = await PrintBluetoothThermal.writeBytes(ticket);
-      print("impresion $result");
+      print("print test result:  $result");
     } else {
       //no conectado, reconecte
     }
@@ -312,22 +329,27 @@ class _MyAppState extends State<MyApp> {
     List<int> bytes = [];
     // Using default profile
     final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm58, profile);
+    final generator = Generator(optionprinttype == "58 mm" ? PaperSize.mm58 : PaperSize.mm80, profile);
     //bytes += generator.setGlobalFont(PosFontType.fontA);
     bytes += generator.reset();
 
     final ByteData data = await rootBundle.load('assets/mylogo.jpg');
     final Uint8List bytesImg = data.buffer.asUint8List();
-    final image = Imag.decodeImage(bytesImg);
-    // Using `ESC *`
+    img.Image? image = img.decodeImage(bytesImg);
+
+    if (Platform.isIOS) {
+      // Resizes the image to half its original size and reduces the quality to 80%
+      final resizedImage = img.copyResize(image!, width: image.width ~/ 1.3, height: image.height ~/ 1.3, interpolation: img.Interpolation.nearest);
+      final bytesimg = Uint8List.fromList(img.encodeJpg(resizedImage));
+      //image = img.decodeImage(bytesimg);
+    }
+
+    //Using `ESC *`
     bytes += generator.image(image!);
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ', styles: PosStyles());
+    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
     bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text(
-      'Special 2: blåbærgrød',
-      styles: PosStyles(codeTable: 'CP1252'),
-    );
+    bytes += generator.text('Special 2: blåbærgrød', styles: PosStyles(codeTable: 'CP1252'));
 
     bytes += generator.text('Bold text', styles: PosStyles(bold: true));
     bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
@@ -355,6 +377,7 @@ class _MyAppState extends State<MyApp> {
     ]);
 
     //barcode
+
     final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
     bytes += generator.barcode(Barcode.upcA(barData));
 
