@@ -1,0 +1,6 @@
+framework module print_bluetooth_thermal {
+  umbrella header "print_bluetooth_thermal-umbrella.h"
+
+  export *
+  module * { export * }
+}
