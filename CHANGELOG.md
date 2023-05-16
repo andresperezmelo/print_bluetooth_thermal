@@ -1,3 +1,18 @@
+## [1.0.7]
+
+1. Added support for IOS
+2. Updated the gradle version to 7.2.0
+3. Kotlin version was updated to 1.8.0
+
+
+## [1.0.6]
+
+1. Fixed a bug that when validating bluetooth permission on devices with android sdk less than 31 showed false, and it should be true since those devices do not need the access permission to nearby devices
+
+## [1.0.5]
+
+1. Fixed an error that in versions of android with decimals, for example android 7.1.1, did not work.
+
 ## [1.0.3]
 
 1. Added support for android 12

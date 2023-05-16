@@ -1,11 +1,11 @@
 # print_bluetooth_thermal
 
-## Package to print tickets on 58mm or 80mm thermal printers on Android.
+## Package to print tickets on 58mm or 80mm thermal printers on Android or IOS.
 
 This package emerged as an alternative to the current ones that use the location permission and Google Play
 blocks apps that don't explain what to use location permission for.
 
-> If you want to supply the swift code, you need to receive raw bytes to use the byte class
+> If you want to supply the c++ code, you need to receive raw bytes to use the byte class
 
 ## Getting Started
 
@@ -34,8 +34,8 @@ PrintBluetoothThermal
 | PrintBluetoothThermal.bluetoothEnabled | returns true if bluetooth is on |
 | PrintBluetoothThermal.pairedBluetooths | retronates all paired bluetooth on the device |
 | PrintBluetoothThermal.connectionStatus | returns true if you are currently connected to the printer |
-| PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent |
-| PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successful |
+| PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successfull, the mac address of the printer's bluetooth must be sent |
+| PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
 | PrintBluetoothThermal.writeString | Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%) |
 |  PrintBluetoothThermal.disconnect | disconnect print |
 | PrintBluetoothThermal.platformVersion | gets the android version where it is running, returns String |
@@ -195,11 +195,13 @@ Future<List<int>> testTicket() async {
 ```
 
 # Screenshot of the example app, you can copy the code from the example
-![App example](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.jpeg)
+![App example Android](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.jpeg)
+![App example IOS](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print_iphone.jpg)
 # Ticket printed with various sizes
 ![Print sizes](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/size.jpeg)
 # Ticket printed with various forms
-![Use package print_bluetooth_thermal](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print.jpeg)
+![Use package print_bluetooth_thermal 58 mm](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print.jpeg)
+![Use package print_bluetooth_thermal 80 mm](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print80mm.jpg)
 
 
 # Built with 🛠️
@@ -208,7 +210,11 @@ _Thanks to these tools this fabulous project has been created_
 
 * [Dart](https://dart.dev/) - language used
 * [kotlin](https://kotlinlang.org/) - language used
+* [Swift](https://www.swift.com/) - language used
 * [Flutter](https://flutter.dev/) - framework used
+
+# Donate
+[![Donate](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/Donate_PayPal.png)](https://www.paypal.com/donate/?hosted_button_id=8UMQ755US94XL)
 
 # License
 Note: This license has also been called the "New BSD License" or "Modified BSD License". See also the 2-clause BSD License.
