@@ -17,7 +17,7 @@ blocks apps that don't explain what to use location permission for.
 > In Info.plist add line in folder/ios/runner/info.plist
 ``` dart
 <key>NSBluetoothAlwaysUsageDescription</key>
-<string>Acceso al bluetooth para conectar impresoras termicas de 58 mm o 80 mm</string>
+<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
 ```
 
 1. Import the package
