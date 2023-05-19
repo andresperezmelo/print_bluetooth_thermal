@@ -14,7 +14,7 @@ blocks apps that don't explain what to use location permission for.
 * If you want to print images, qr code, barcode use the package [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
 
 #Configure in IOS
->> In Info.plist add line in folder/ios/runner/info.plist
+> In Info.plist add line in folder/ios/runner/info.plist
 ``` dart
 <key>NSBluetoothAlwaysUsageDescription</key>
 <string>Acceso al bluetooth para conectar impresoras termicas de 58 mm o 80 mm</string>
