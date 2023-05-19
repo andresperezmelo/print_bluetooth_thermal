@@ -1,3 +1,7 @@
+## [1.0.8]
+
+1. Update README.md
+
 ## [1.0.7]
 
 1. Added support for IOS

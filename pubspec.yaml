@@ -1,6 +1,6 @@
 name: print_bluetooth_thermal
 description: Ticket printing for android, location permission is not requested to connect the printer 
-version: 1.0.7
+version: 1.0.8
 homepage: https://github.com/andresperezmelo/print_bluetooth_termal
 
 environment:
