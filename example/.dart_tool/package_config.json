@@ -140,12 +140,6 @@
       "languageVersion": "2.18"
     },
     {
-      "name": "plugin_platform_interface",
-      "rootUri": "file:///C:/Users/andre/AppData/Local/Pub/Cache/hosted/pub.dev/plugin_platform_interface-2.1.4",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
-    },
-    {
       "name": "pointycastle",
       "rootUri": "file:///C:/Users/andre/AppData/Local/Pub/Cache/hosted/pub.dev/pointycastle-3.7.3",
       "packageUri": "lib/",
@@ -224,7 +218,7 @@
       "languageVersion": "2.12"
     }
   ],
-  "generated": "2023-05-16T20:04:53.576887Z",
+  "generated": "2023-05-20T11:59:59.581074Z",
   "generator": "pub",
   "generatorVersion": "2.19.6"
 }

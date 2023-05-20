@@ -44,7 +44,7 @@ class PrintBluetoothThermal {
     return bluetoothState;
   }
 
-  ///retronates all paired bluetooth on the device
+  ///Android: Return all paired bluetooth on the device IOS: Return nearby bluetooths
   static Future<List<BluetoothInfo>> get pairedBluetooths async {
     //bluetooth vinculados
     List<BluetoothInfo> items = [];

@@ -13,12 +13,19 @@ blocks apps that don't explain what to use location permission for.
 
 * If you want to print images, qr code, barcode use the package [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
 
+#Configure in IOS
+> In Info.plist add line in folder/ios/runner/info.plist
+``` dart
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+```
 
 1. Import the package
 
 ```dart
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 ```
+
 
 2. After that you can use 
 ``` dart
@@ -32,7 +39,7 @@ PrintBluetoothThermal
 | --- | --- |
 | PrintBluetoothThermal.isPermissionBluetoothGranted | returns true if the BLUETOOTH_CONNECT permission is enabled, it is only required from android 12 onwards |
 | PrintBluetoothThermal.bluetoothEnabled | returns true if bluetooth is on |
-| PrintBluetoothThermal.pairedBluetooths | retronates all paired bluetooth on the device |
+| PrintBluetoothThermal.pairedBluetooths | Android: Return all paired bluetooth on the device IOS: Return nearby bluetooths |
 | PrintBluetoothThermal.connectionStatus | returns true if you are currently connected to the printer |
 | PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successfull, the mac address of the printer's bluetooth must be sent |
 | PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
