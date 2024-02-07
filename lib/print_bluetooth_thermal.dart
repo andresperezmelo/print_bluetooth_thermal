@@ -1,13 +1,10 @@
-import 'dart:async';
 import 'package:flutter/services.dart';
 
 class PrintBluetoothThermal {
   static const MethodChannel _channel = MethodChannel('groons.web.app/print');
 
   // Private constructor
-  PrintBluetoothThermal._privateConstructor() {
-    initializeBluetooth(); // Consider calling initialize here if it's appropriate for your use case.
-  }
+  PrintBluetoothThermal._privateConstructor();
 
   // Static private instance of the class
   static final PrintBluetoothThermal _instance =
@@ -16,18 +13,33 @@ class PrintBluetoothThermal {
   // Public static getter for the instance
   static PrintBluetoothThermal get instance => _instance;
 
-  // Initialize Bluetooth connection
+  // Flag to check if initialized
+  bool _isInitialized = false;
+
+  // Public method to initialize Bluetooth connection
   Future<void> initializeBluetooth() async {
-    try {
-      final String result = await _channel.invokeMethod('initializeBluetooth');
-      print(result); // Should print "Bluetooth central manager initialized"
-    } on PlatformException catch (e) {
-      print("Failed to initialize Bluetooth: '${e.message}'.");
+    if (!_isInitialized) {
+      try {
+        final String result =
+            await _channel.invokeMethod('initializeBluetooth');
+        print(result); // Should print "Bluetooth central manager initialized"
+        _isInitialized = true;
+      } on PlatformException catch (e) {
+        print("Failed to initialize Bluetooth: '${e.message}'.");
+      }
     }
   }
 
-  // Converted instance methods
+  // Add _ensureInitialized method to wrap calls that require Bluetooth to be initialized
+  Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      await initializeBluetooth();
+    }
+  }
+
   Future<bool> isPermissionBluetoothGranted() async {
+    // Ensure initialization before proceeding
+    await _ensureInitialized();
     bool bluetoothState = false;
     try {
       bluetoothState =
@@ -49,6 +61,8 @@ class PrintBluetoothThermal {
   }
 
   Future<List<BluetoothInfo>> pairedBluetooths() async {
+    await _ensureInitialized();
+
     List<BluetoothInfo> items = [];
     try {
       final List<dynamic> result =
@@ -66,6 +80,8 @@ class PrintBluetoothThermal {
 
   //returns true if you are currently connected to the printer
   Future<bool> get connectionStatus async {
+    await _ensureInitialized();
+
     //estado de la conexion eon el bluetooth
     try {
       final bool result = await _channel.invokeMethod('connectionstatus');
@@ -79,6 +95,8 @@ class PrintBluetoothThermal {
 
   ///send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent
   Future<bool> connect({required String macPrinterAddress}) async {
+    await _ensureInitialized();
+
     //conectar impresora bluetooth
     bool result = false;
 
@@ -95,6 +113,8 @@ class PrintBluetoothThermal {
 
   ///send bytes to print, esc_pos_utils_plus package must be used, returns true if successful
   Future<bool> writeBytes(List<int> bytes) async {
+    await _ensureInitialized();
+
     //enviar bytes a la impresora
     try {
       final bool result = await _channel.invokeMethod('writebytes', bytes);
@@ -108,6 +128,8 @@ class PrintBluetoothThermal {
 
   ///Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%)
   Future<bool> writeString({required PrintTextSize printText}) async {
+    await _ensureInitialized();
+
     ///EN: you must send the enter \n to print the complete phrase, it is not sent automatically because you may want to add several
     /// horizontal values ​​of different size
     ///ES: se debe enviar el enter \n para que imprima la frase completa, no se envia automatico por que tal vez quiera agregar varios
@@ -148,6 +170,8 @@ class PrintBluetoothThermal {
 
   ///disconnect print
   Future<bool> get disconnect async {
+    await _ensureInitialized();
+
     bool status = false;
     try {
       status = await _channel.invokeMethod('disconnect');
