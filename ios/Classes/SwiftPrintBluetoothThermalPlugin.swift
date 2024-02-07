@@ -22,9 +22,19 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     //     super.init()
     //     centralManager = CBCentralManager(delegate: self, queue: nil)
     // }
-  public static func initializeCentralManager() {
+  public func initializeCentralManager() {
     centralManager = CBCentralManager(delegate: self, queue: nil)
   }
+
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    self.flutterResult = result
+    
+    if call.method == "initializeBluetooth" {
+        // Calls the method to initialize the central manager.
+        initializeCentralManager()
+        result("Bluetooth central manager initialized")
+    }
+}
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())

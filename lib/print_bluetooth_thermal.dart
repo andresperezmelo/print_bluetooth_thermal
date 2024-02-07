@@ -19,8 +19,13 @@ class PrintBluetoothThermal {
   }*/
 
   // Dart method to call 'initializeBluetooth' method in Swift
-  static initializeBluetooth() async {
-    await _channel.invokeMethod('initializeBluetooth');
+  Future<void> initializeBluetooth() async {
+    try {
+      final String result = await _channel.invokeMethod('initializeBluetooth');
+      print(result); // Should print "Bluetooth central manager initialized"
+    } on PlatformException catch (e) {
+      print("Failed to initialize Bluetooth: '${e.message}'.");
+    }
   }
 
   ///Check if it is allowed on Android 12 access to Bluetooth onwards
