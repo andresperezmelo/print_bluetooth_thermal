@@ -40,7 +40,7 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     if call.method == "getPlatformVersion" { // Verifica si se está llamando el método "getPlatformVersion"
       let iosVersion = UIDevice.current.systemVersion // Obtiene la versión de iOS
       result("iOS " + iosVersion) // Devuelve el resultado como una cadena de texto
-    } else if "initializeBluetooth" {
+    } else if call.method == "initializeBluetooth" {
         // Calls the method to initialize the central manager.
         initializeCentralManager()
         result("Bluetooth central manager initialized")
