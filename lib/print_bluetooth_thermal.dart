@@ -2,35 +2,21 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 class PrintBluetoothThermal {
-  static const MethodChannel _channel =
-      const MethodChannel('groons.web.app/print');
+  static const MethodChannel _channel = MethodChannel('groons.web.app/print');
 
   // Private constructor
-  PrintBluetoothThermal._privateConstructor();
+  PrintBluetoothThermal._privateConstructor() {
+    initializeBluetooth(); // Consider calling initialize here if it's appropriate for your use case.
+  }
 
   // Static private instance of the class
   static final PrintBluetoothThermal _instance =
       PrintBluetoothThermal._privateConstructor();
 
-  // Factory constructor to return the instance
-  factory PrintBluetoothThermal() {
-    return _instance;
-  }
+  // Public static getter for the instance
+  static PrintBluetoothThermal get instance => _instance;
 
-  /*static Future<bool> get bluetoothAvailable async {
-    //bluetooth esta disponible?
-    bool bluetoothState = false;
-    try {
-      bluetoothState = await _channel.invokeMethod('bluetoothavailable');
-      //print("llego: $result");
-    } on PlatformException catch (e) {
-      print("Fallo Bluetooth status: '${e.message}'.");
-    }
-
-    return bluetoothState;
-  }*/
-
-  // Dart method to call 'initializeBluetooth' method in Swift
+  // Initialize Bluetooth connection
   Future<void> initializeBluetooth() async {
     try {
       final String result = await _channel.invokeMethod('initializeBluetooth');
@@ -40,57 +26,46 @@ class PrintBluetoothThermal {
     }
   }
 
-  ///Check if it is allowed on Android 12 access to Bluetooth onwards
-  static Future<bool> get isPermissionBluetoothGranted async {
-    //bluetooth esta disponible?
+  // Converted instance methods
+  Future<bool> isPermissionBluetoothGranted() async {
     bool bluetoothState = false;
     try {
       bluetoothState =
           await _channel.invokeMethod('ispermissionbluetoothgranted');
-      //print("llego: $bluetoothState");
     } on PlatformException catch (e) {
-      print("Fallo Bluetooth status: '${e.message}'.");
+      print("Failed Bluetooth status: '${e.message}'.");
     }
-
     return bluetoothState;
   }
 
-  ///returns true if bluetooth is on
-  static Future<bool> get bluetoothEnabled async {
-    //bluetooth esta prendido?
+  Future<bool> bluetoothEnabled() async {
     bool bluetoothState = false;
     try {
       bluetoothState = await _channel.invokeMethod('bluetoothenabled');
     } on PlatformException catch (e) {
-      print("Fallo Bluetooth status: '${e.message}'.");
+      print("Failed Bluetooth status: '${e.message}'.");
     }
-
     return bluetoothState;
   }
 
-  ///Android: Return all paired bluetooth on the device IOS: Return nearby bluetooths
-  static Future<List<BluetoothInfo>> get pairedBluetooths async {
-    //bluetooth vinculados
+  Future<List<BluetoothInfo>> pairedBluetooths() async {
     List<BluetoothInfo> items = [];
     try {
-      final List result = await _channel.invokeMethod('pairedbluetooths');
-      //print("llego: $result");
-      await Future.forEach(result, (element) {
+      final List<dynamic> result =
+          await _channel.invokeMethod('pairedbluetooths');
+      for (var element in result) {
         String item = element as String;
         List<String> info = item.split("#");
-        String name = info[0];
-        String mac = info[1];
-        items.add(BluetoothInfo(name: name, macAdress: mac));
-      });
+        items.add(BluetoothInfo(name: info[0], macAdress: info[1]));
+      }
     } on PlatformException catch (e) {
-      print("Fail pairedBluetooths: '${e.message}'.");
+      print("Failed pairedBluetooths: '${e.message}'.");
     }
-
     return items;
   }
 
   //returns true if you are currently connected to the printer
-  static Future<bool> get connectionStatus async {
+  Future<bool> get connectionStatus async {
     //estado de la conexion eon el bluetooth
     try {
       final bool result = await _channel.invokeMethod('connectionstatus');
@@ -103,7 +78,7 @@ class PrintBluetoothThermal {
   }
 
   ///send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent
-  static Future<bool> connect({required String macPrinterAddress}) async {
+  Future<bool> connect({required String macPrinterAddress}) async {
     //conectar impresora bluetooth
     bool result = false;
 
@@ -119,7 +94,7 @@ class PrintBluetoothThermal {
   }
 
   ///send bytes to print, esc_pos_utils_plus package must be used, returns true if successful
-  static Future<bool> writeBytes(List<int> bytes) async {
+  Future<bool> writeBytes(List<int> bytes) async {
     //enviar bytes a la impresora
     try {
       final bool result = await _channel.invokeMethod('writebytes', bytes);
@@ -132,7 +107,7 @@ class PrintBluetoothThermal {
   }
 
   ///Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%)
-  static Future<bool> writeString({required PrintTextSize printText}) async {
+  Future<bool> writeString({required PrintTextSize printText}) async {
     ///EN: you must send the enter \n to print the complete phrase, it is not sent automatically because you may want to add several
     /// horizontal values ​​of different size
     ///ES: se debe enviar el enter \n para que imprima la frase completa, no se envia automatico por que tal vez quiera agregar varios
@@ -153,13 +128,13 @@ class PrintBluetoothThermal {
   }
 
   ///gets the android version where it is running, returns String
-  static Future<String> get platformVersion async {
+  Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
 
   ///get the percentage of the battery returns int
-  static Future<int> get batteryLevel async {
+  Future<int> get batteryLevel async {
     int result = 0;
 
     try {
@@ -172,7 +147,7 @@ class PrintBluetoothThermal {
   }
 
   ///disconnect print
-  static Future<bool> get disconnect async {
+  Future<bool> get disconnect async {
     bool status = false;
     try {
       status = await _channel.invokeMethod('disconnect');
