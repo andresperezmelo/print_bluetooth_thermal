@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 class PrintBluetoothThermal {
-  static const MethodChannel _channel = const MethodChannel('groons.web.app/print');
+  static const MethodChannel _channel =
+      const MethodChannel('groons.web.app/print');
 
   /*static Future<bool> get bluetoothAvailable async {
     //bluetooth esta disponible?
@@ -17,12 +18,18 @@ class PrintBluetoothThermal {
     return bluetoothState;
   }*/
 
+  // Dart method to call 'initializeBluetooth' method in Swift
+  static initializeBluetooth() async {
+    await _channel.invokeMethod('initializeBluetooth');
+  }
+
   ///Check if it is allowed on Android 12 access to Bluetooth onwards
   static Future<bool> get isPermissionBluetoothGranted async {
     //bluetooth esta disponible?
     bool bluetoothState = false;
     try {
-      bluetoothState = await _channel.invokeMethod('ispermissionbluetoothgranted');
+      bluetoothState =
+          await _channel.invokeMethod('ispermissionbluetoothgranted');
       //print("llego: $bluetoothState");
     } on PlatformException catch (e) {
       print("Fallo Bluetooth status: '${e.message}'.");

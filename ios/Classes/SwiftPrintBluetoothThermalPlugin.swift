@@ -16,12 +16,15 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     var bytes: [UInt8]? //variable para almacenar los bytes que llegan
     var stringprint = ""; //variable para almacenar los string que llegan
 
-    // En el método init, inicializa el gestor central con un delegado
-    //para solicitar el permiso del bluetooth
-    override init() {
-        super.init()
-        centralManager = CBCentralManager(delegate: self, queue: nil)
-    }
+    // // En el método init, inicializa el gestor central con un delegado
+    // //para solicitar el permiso del bluetooth
+    // override init() {
+    //     super.init()
+    //     centralManager = CBCentralManager(delegate: self, queue: nil)
+    // }
+  public static func initializeCentralManager() {
+    centralManager = CBCentralManager(delegate: self, queue: nil)
+  }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())
