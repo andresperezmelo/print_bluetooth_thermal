@@ -5,6 +5,18 @@ class PrintBluetoothThermal {
   static const MethodChannel _channel =
       const MethodChannel('groons.web.app/print');
 
+  // Private constructor
+  PrintBluetoothThermal._privateConstructor();
+
+  // Static private instance of the class
+  static final PrintBluetoothThermal _instance =
+      PrintBluetoothThermal._privateConstructor();
+
+  // Factory constructor to return the instance
+  factory PrintBluetoothThermal() {
+    return _instance;
+  }
+
   /*static Future<bool> get bluetoothAvailable async {
     //bluetooth esta disponible?
     bool bluetoothState = false;
