@@ -16,12 +16,15 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     var bytes: [UInt8]? //variable para almacenar los bytes que llegan
     var stringprint = ""; //variable para almacenar los string que llegan
 
-    // En el método init, inicializa el gestor central con un delegado
-    //para solicitar el permiso del bluetooth
-    override init() {
-        super.init()
-        centralManager = CBCentralManager(delegate: self, queue: nil)
-    }
+    // // En el método init, inicializa el gestor central con un delegado
+    // //para solicitar el permiso del bluetooth
+    // override init() {
+    //     super.init()
+    //     centralManager = CBCentralManager(delegate: self, queue: nil)
+    // }
+  public func initializeCentralManager() {
+    centralManager = CBCentralManager(delegate: self, queue: nil)
+  }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())
@@ -37,6 +40,10 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     if call.method == "getPlatformVersion" { // Verifica si se está llamando el método "getPlatformVersion"
       let iosVersion = UIDevice.current.systemVersion // Obtiene la versión de iOS
       result("iOS " + iosVersion) // Devuelve el resultado como una cadena de texto
+    } else if call.method == "initializeBluetooth" {
+        // Calls the method to initialize the central manager.
+        initializeCentralManager()
+        result("Bluetooth central manager initialized")
     } else if call.method == "getBatteryLevel" {
       let device = UIDevice.current
       let batteryState = device.batteryState
