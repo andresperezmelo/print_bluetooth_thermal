@@ -92,14 +92,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
 
       result.success(permission)
     }else if ( call.method == "initializeBluetooth") {
-
-      val isBluetoothEnabled = bluetoothAdapter!!.isEnabled
-      if (isBluetoothEnabled) {
-          result.success("Bluetooth is enabled")
-      } else {
-          result.error("BLUETOOTH_DISABLED", "Bluetooth is disabled", null)
-      }
-    
+      result.success("Initialized")
     }else if ( !permissionGranted && sdkversion >= 31) {
       Log.i("warning","permission bluetooth granted is false, check in settings that the permission of nearby devices is activated")
       return;
