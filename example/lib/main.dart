@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:print_bluetooth_thermal/post_code.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
-import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal_windows.dart';
 
 void main() {
   runApp(MyApp());
@@ -67,6 +69,7 @@ class _MyAppState extends State<MyApp> {
                   initPlatformState();
                 } else if (sel == "connection status") {
                   final bool result = await PrintBluetoothThermal.connectionStatus;
+                  connected = result;
                   setState(() {
                     _info = "connection status: $result";
                   });
@@ -223,7 +226,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await PrintBluetoothThermal.platformVersion;
-      print("patformversion: $platformVersion");
+      //print("patformversion: $platformVersion");
       porcentbatery = await PrintBluetoothThermal.batteryLevel;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
@@ -298,14 +301,29 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> printTest() async {
+    /*if (kDebugMode) {
+      bool result = await PrintBluetoothThermalWindows.writeBytes(bytes: "Hello \n".codeUnits);
+      return;
+    }*/
+
     bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
     //print("connection status: $conexionStatus");
     if (conexionStatus) {
-      List<int> ticket = await testTicket();
-      final result = await PrintBluetoothThermal.writeBytes(ticket);
+      bool result = false;
+      if (Platform.isWindows) {
+        List<int> ticket = await testWindows();
+        result = await PrintBluetoothThermalWindows.writeBytes(bytes: ticket);
+      } else {
+        List<int> ticket = await testTicket();
+        result = await PrintBluetoothThermal.writeBytes(ticket);
+      }
       print("print test result:  $result");
     } else {
-      //no conectado, reconecte
+      print("print test conexionStatus: $conexionStatus");
+      setState(() {
+        disconnect();
+      });
+      //throw Exception("Not device connected");
     }
   }
 
@@ -345,7 +363,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     //Using `ESC *`
-    bytes += generator.image(image!);
+    //bytes += generator.image(image!);
 
     bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
     bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
@@ -406,6 +424,33 @@ class _MyAppState extends State<MyApp> {
 
     bytes += generator.feed(2);
     //bytes += generator.cut();
+    return bytes;
+  }
+
+  Future<List<int>> testWindows() async {
+    List<int> bytes = [];
+
+    bytes += PostCode.text(text: "Size compressed", fontSize: FontSize.compressed);
+    bytes += PostCode.text(text: "Size normal", fontSize: FontSize.normal);
+    bytes += PostCode.text(text: "Bold", bold: true);
+    bytes += PostCode.text(text: "Inverse", inverse: true);
+    bytes += PostCode.text(text: "AlignPos right", align: AlignPos.right);
+    bytes += PostCode.text(text: "Size big", fontSize: FontSize.big);
+    bytes += PostCode.enter();
+
+    //List of rows
+    bytes += PostCode.row(texts: ["PRODUCT", "VALUE"], proportions: [60, 40], fontSize: FontSize.compressed);
+    for (int i = 0; i < 3; i++) {
+      bytes += PostCode.row(texts: ["Item $i", "$i,00"], proportions: [60, 40], fontSize: FontSize.compressed);
+    }
+
+    bytes += PostCode.line();
+
+    bytes += PostCode.barcode(barcodeData: "123456789");
+    bytes += PostCode.qr("123456789");
+
+    bytes += PostCode.enter(nEnter: 5);
+
     return bytes;
   }
 

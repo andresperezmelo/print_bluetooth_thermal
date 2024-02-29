@@ -1,3 +1,7 @@
+## [1.1.0]
+
+1. Add support for Windows print
+
 ## [1.0.9]
 
 1. Update README.md

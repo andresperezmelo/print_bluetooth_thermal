@@ -37,17 +37,30 @@ PrintBluetoothThermal
 
 | Comando | Descripción |
 | --- | --- |
-| PrintBluetoothThermal.isPermissionBluetoothGranted | returns true if the BLUETOOTH_CONNECT permission is enabled, it is only required from android 12 onwards |
-| PrintBluetoothThermal.bluetoothEnabled | returns true if bluetooth is on |
+| PrintBluetoothThermal.isPermissionBluetoothGranted | Returns true if the BLUETOOTH_CONNECT permission is enabled, it is only required from android 12 onwards |
+| PrintBluetoothThermal.bluetoothEnabled | Returns true if bluetooth is on |
 | PrintBluetoothThermal.pairedBluetooths | Android: Return all paired bluetooth on the device IOS: Return nearby bluetooths |
-| PrintBluetoothThermal.connectionStatus | returns true if you are currently connected to the printer |
-| PrintBluetoothThermal.connect | send connection to ticket printer and wait true if it was successfull, the mac address of the printer's bluetooth must be sent |
-| PrintBluetoothThermal.writeBytes | send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
+| PrintBluetoothThermal.connectionStatus | Returns true if you are currently connected to the printer |
+| PrintBluetoothThermal.connect | Send connection to ticket printer and wait true if it was successfull, the mac address of the printer's bluetooth must be sent |
+| PrintBluetoothThermal.writeBytes | Send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
 | PrintBluetoothThermal.writeString | Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%) |
-|  PrintBluetoothThermal.disconnect | disconnect print |
-| PrintBluetoothThermal.platformVersion | gets the android version where it is running, returns String |
-| PrintBluetoothThermal.batteryLevel | get the percentage of the battery returns int |
+|  PrintBluetoothThermal.disconnect | Disconnect print |
+| PrintBluetoothThermal.platformVersion | Gets the android version where it is running, returns String |
+| PrintBluetoothThermal.batteryLevel | Get the percentage of the battery returns int |
 
+# Available commands by platform
+| Function | Android | iOS | Windows |
+|----------|:-------:|:---:|:-------:|
+| PrintBluetoothThermal.isPermissionBluetoothGranted |    ✅   |  ✅  |    ❌    |
+| PrintBluetoothThermal.bluetoothEnabled |    ✅   |  ✅  |    ❌    |
+| PrintBluetoothThermal.pairedBluetooths |    ✅   |  ✅  |    ✅    |
+| PrintBluetoothThermal.connectionStatus |    ✅   |  ✅  |    ✅    |
+| PrintBluetoothThermal.connect |    ✅   |  ✅  |    ✅    |
+| PrintBluetoothThermal.writeBytes |    ✅   |  ✅  |    ✅    |
+| PrintBluetoothThermal.writeString |    ✅   |  ✅  |    ❌    |
+| PrintBluetoothThermal.disconnect |    ✅   |  ✅  |    ✅    |
+| PrintBluetoothThermal.platformVersion |    ✅   |  ✅  |    ❌    |
+| PrintBluetoothThermal.batteryLevel |    ✅   |  ✅  |    ❌    |
 
 
 # Examples
