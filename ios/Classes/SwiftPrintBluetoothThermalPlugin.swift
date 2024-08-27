@@ -20,7 +20,7 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
     //para solicitar el permiso del bluetooth
     override init() {
         super.init()
-        centralManager = CBCentralManager(delegate: self, queue: nil)
+        // centralManager = CBCentralManager(delegate: self, queue: nil)
     }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -30,6 +30,12 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    // En el método init, inicializa el gestor central con un delegado
+    //para solicitar el permiso del bluetooth
+    if (self.centralManager == nil) {
+        self.centralManager = CBCentralManager(delegate: self, queue: nil)
+    }
+
     //para iniciar la variable result
     self.flutterResult = result
     //result("iOS " + UIDevice.current.systemVersion)
