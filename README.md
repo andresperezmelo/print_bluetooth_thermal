@@ -215,7 +215,7 @@ Future<List<int>> testTicket() async {
 ```
 
 # Screenshot of the example app, you can copy the code from the example
-![App example Android](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/myapp.jpeg)
+![App example Android](https://github.com/andresperezmelo/print_bluetooth_thermal/blob/main/myapp.png)
 ![App example IOS](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print_iphone.jpg)
 # Ticket printed with various sizes
 ![Print sizes](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/size.jpeg)
