@@ -1,3 +1,15 @@
+## [1.1.3]
+
+1. Update folder ios and update platform suport
+
+## [1.1.2]
+
+1. Updated to support the new Android versions in new Flutter projects.
+
+## [1.1.1]
+
+1. Update readme.md
+
 ## [1.1.0]
 
 1. Add support for Windows print

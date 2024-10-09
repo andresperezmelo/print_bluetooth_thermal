@@ -130,7 +130,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       }
     } else if (call.method == "connect") {
       var macimpresora = call.arguments.toString();
-       //Log.d(TAG, "coneccting kt: mac: "+macimpresora);
+      //Log.d(TAG, "coneccting kt: mac: "+macimpresora);
       if(macimpresora.length>0){
         mac = macimpresora;
       }else{
@@ -157,7 +157,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       var bytes: ByteArray = "\n".toByteArray()
 
       lista.forEach {
-        bytes += it.toByte() 
+        bytes += it.toByte()
         //Log.d(TAG, "foreah: ${it}")
       }
       if(outputStream != null) {
@@ -171,7 +171,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           result.success(false)
           outputStream = null
           //mensajeToast("Dispositivo fue desconectado, reconecte")
-           Log.d(TAG, "error state print: ${e.message}")
+          Log.d(TAG, "error state print: ${e.message}")
           /*var ex:String = e.message.toString()
           if(ex=="Broken pipe"){
             Log.d(TAG, "Dispositivo fue desconectado reconecte: ")
@@ -221,7 +221,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       }else{
         result.success("false")
       }
-    }else if (call.method == "writebytesChinese") { 
+    }else if (call.method == "writebytesChinese") {
       var lista: List<Int> = call.arguments as List<Int>
       var bytes: ByteArray = "\n".toByteArray()
 
@@ -288,7 +288,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
           val bluetoothAddress = mac//"66:02:BD:06:18:7B" // replace with your device's address
           val bluetoothDevice = bluetoothAdapter.getRemoteDevice(bluetoothAddress)
           val bluetoothSocket = bluetoothDevice?.createRfcommSocketToServiceRecord(
-                  UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
           )
           bluetoothAdapter.cancelDiscovery()
           bluetoothSocket?.connect()
@@ -361,12 +361,12 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       val caracteres_escape = byteArrayOf(0x1B, 0x74, 0x10)
 
       val size = arrayOf(
-              byteArrayOf(0x1d, 0x21, 0x00), // La fuente no se agranda 0
-              byteArrayOf(0x1b, 0x4d, 0x01), // Fuente ASCII comprimida 1
-              byteArrayOf(0x1b, 0x4d, 0x00), //Fuente estándar ASCII    2
-              byteArrayOf(0x1d, 0x21, 0x11), // Altura doblada 3
-              byteArrayOf(0x1d, 0x21, 0x22), // Altura doblada 4
-              byteArrayOf(0x1d, 0x21, 0x33) // Altura doblada 5
+        byteArrayOf(0x1d, 0x21, 0x00), // La fuente no se agranda 0
+        byteArrayOf(0x1b, 0x4d, 0x01), // Fuente ASCII comprimida 1
+        byteArrayOf(0x1b, 0x4d, 0x00), //Fuente estándar ASCII    2
+        byteArrayOf(0x1d, 0x21, 0x11), // Altura doblada 3
+        byteArrayOf(0x1d, 0x21, 0x22), // Altura doblada 4
+        byteArrayOf(0x1d, 0x21, 0x33) // Altura doblada 5
       )
 
 
@@ -415,6 +415,5 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
-
 
 }
