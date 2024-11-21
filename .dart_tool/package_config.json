@@ -218,12 +218,6 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "web",
-      "rootUri": "file:///C:/Users/andres/AppData/Local/Pub/Cache/hosted/pub.dev/web-0.5.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.3"
-    },
-    {
       "name": "win_ble",
       "rootUri": "file:///C:/Users/andres/AppData/Local/Pub/Cache/hosted/pub.dev/win_ble-1.1.1",
       "packageUri": "lib/",
@@ -242,10 +236,10 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2024-09-25T20:26:47.559231Z",
+  "generated": "2024-11-21T21:02:19.365634Z",
   "generator": "pub",
-  "generatorVersion": "3.5.3",
+  "generatorVersion": "3.5.4",
   "flutterRoot": "file:///C:/dev/flutter",
-  "flutterVersion": "3.24.3",
+  "flutterVersion": "3.24.5",
   "pubCache": "file:///C:/Users/andres/AppData/Local/Pub/Cache"
 }

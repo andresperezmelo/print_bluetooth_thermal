@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/print_bluetooth_thermal.iml" filepath="$PROJECT_DIR$/print_bluetooth_thermal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/print_bluetooth_thermal_android.iml" filepath="$PROJECT_DIR$/android/print_bluetooth_thermal_android.iml" />
     </modules>
   </component>
 </project>

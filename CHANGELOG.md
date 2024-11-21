@@ -1,3 +1,7 @@
+## [1.1.4]
+1. Delete package web
+2. update code pull request #52
+
 ## [1.1.3]
 
 1. Update folder ios and update platform suport
