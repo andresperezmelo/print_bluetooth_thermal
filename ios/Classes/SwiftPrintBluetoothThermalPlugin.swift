@@ -170,8 +170,14 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
                 let chunkData = data.subdata(in: chunkRange)
                 //print("chunkData count: \(chunkData.count)")
                 // Envía el fragmento para imprimir utilizando la característica deseada
-                self.connectedPeripheral?.writeValue(chunkData, for: characteristic, type: .withoutResponse)
 
+                var writeType = CBCharacteristicWriteType.withoutResponse;
+                if characteristic.properties.contains(.write) {
+                   writeType = CBCharacteristicWriteType.withResponse;
+                }
+
+                 self.connectedPeripheral?.writeValue(chunkData, for: characteristic, type: writeType)
+                   
                 offset += chunkSize
             }
             //la respuesta va en peripheral
@@ -212,14 +218,20 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
 
                     // Envío de los datos
                     let datasize = Data(sizeBytes[size])
-                    connectedPeripheral?.writeValue(datasize, for: characteristic, type: .withoutResponse)
+
+                    var writeType = CBCharacteristicWriteType.withoutResponse;
+                    if characteristic.properties.contains(.write) {
+                        writeType = CBCharacteristicWriteType.withResponse;
+                    }
+
+                    connectedPeripheral?.writeValue(datasize, for: characteristic, type: writeType)
 
                     let data = Data(texto.utf8)
-                    connectedPeripheral?.writeValue(data, for: characteristic, type: .withResponse) //.withResponse, .withoutResponse
+                    connectedPeripheral?.writeValue(data, for: characteristic, type: writeType)
 
                     // reseteo de la impresora
                     let datareset = Data(resetBytes)
-                    connectedPeripheral?.writeValue(datareset, for: characteristic, type: .withoutResponse)
+                    connectedPeripheral?.writeValue(datareset, for: characteristic, type: writeType)
                     stringprint = ""
 
                     //la respuesta va en peripheral si es .withResponse
@@ -273,11 +285,13 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
            if let services = peripheral.services {
                for service in services {
                    print("Service discovered: \(service.uuid)")
+                   let allowedServices = [
+                        CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"),
+                        CBUUID(string: "49535343-FE7D-4AE5-8FA9-9FAFD205E455"),
+                        CBUUID(string: "A76EB9E0-F3AC-4990-84CF-3A94D2426B2B")
+                   ]
 
-                   // Verifica si el servicio es el que estás buscando
-                   let targetServiceUUID = CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB")
-                   let targetServiceUUID2 =  CBUUID(string: "49535343-FE7D-4AE5-8FA9-9FAFD205E455")
-                   if service.uuid == targetServiceUUID || service.uuid == targetServiceUUID2 {
+                   if allowedServices.contains(service.uuid) {
                        print("Service found: \(service.uuid)") 
                        // Por ejemplo, puedes descubrir las características del servicio
                        peripheral.discoverCharacteristics(nil, for: service)
@@ -303,7 +317,17 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
         if let discoveredCharacteristics = service.characteristics {
             for characteristic in discoveredCharacteristics {
                 //print("characteristics found: \(characteristic.uuid)")
-                if let characteristic = targetCharacteristic {
+            
+                let allowedCharacteristics = [
+                    CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"), 
+                    CBUUID(string: "49535343-8841-43F4-A8D4-ECBE34729BB3"), 
+                    CBUUID(string: "A76EB9E2-F3AC-4990-84CF-3A94D2426B2B")
+                ]
+
+                if allowedCharacteristics.contains(characteristic.uuid) {
+                    targetCharacteristic = characteristic // Guarda la característica objetivo en la variable global
+                    print("Target characteristic found: \(characteristic.uuid)")
+                 
                     if characteristic.properties.contains(.write) {
                         // La característica admite escritura
                         print("characteristics found: \(characteristic.uuid) La característica admite escritura")
@@ -311,14 +335,6 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
                         // La característica no admite escritura
                         print("characteristics found: \(characteristic.uuid) La característica no admite escritura")
                     }
-                }
-
-                let targetCharacteristicUUID = CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB")
-                let targetCharacteristicUUID2 =  CBUUID(string: "49535343-8841-43F4-A8D4-ECBE34729BB3")
-
-                if characteristic.uuid == targetCharacteristicUUID || characteristic.uuid == targetCharacteristicUUID2 {
-                    targetCharacteristic = characteristic // Guarda la característica objetivo en la variable global
-                    print("Target characteristic found: \(characteristic.uuid)")
                     break
                 }
             }
