@@ -3,7 +3,6 @@ import UIKit
 import CoreBluetooth
 
 public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,  FlutterPlugin {
-
     var centralManager: CBCentralManager?  // Define una variable para guardar el gestor central de bluetooth
     var discoveredDevices: [String] = []  //lista de bluetooths encontrados
     var connectedPeripheral: CBPeripheral!  //dispositivo conectado

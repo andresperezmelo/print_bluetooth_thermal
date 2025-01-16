@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal_windows.dart';
 
 class PrintBluetoothThermal {
-  static const MethodChannel _channel = const MethodChannel('groons.web.app/print');
+  static const MethodChannel _channel = MethodChannel('groons.web.app/print');
 
   ///Check if it is allowed on Android 12 access to Bluetooth onwards
   static Future<bool> get isPermissionBluetoothGranted async {
@@ -12,12 +13,12 @@ class PrintBluetoothThermal {
     bool bluetoothState = false;
     if (Platform.isWindows) {
       return true;
-    } else if (Platform.isAndroid || Platform.isIOS) {
+    } else if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       try {
         bluetoothState = await _channel.invokeMethod('ispermissionbluetoothgranted');
-        //print("llego: $bluetoothState");
+        //if(kDebugMode) print("llego: $bluetoothState");
       } on PlatformException catch (e) {
-        print("Fallo Bluetooth status: '${e.message}'.");
+        if (kDebugMode) print("Fallo Bluetooth status: '${e.message}'.");
       }
     }
 
@@ -30,11 +31,11 @@ class PrintBluetoothThermal {
     bool bluetoothState = false;
     if (Platform.isWindows) {
       return true;
-    } else if (Platform.isAndroid || Platform.isIOS) {
+    } else if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       try {
         bluetoothState = await _channel.invokeMethod('bluetoothenabled');
       } on PlatformException catch (e) {
-        print("Fallo Bluetooth status: '${e.message}'.");
+        if (kDebugMode) print("Fallo Bluetooth status: '${e.message}'.");
       }
     }
 
@@ -47,10 +48,10 @@ class PrintBluetoothThermal {
     List<BluetoothInfo> items = [];
     if (Platform.isWindows) {
       items = await PrintBluetoothThermalWindows.getPariedBluetoohts();
-    } else if (Platform.isAndroid || Platform.isIOS) {
+    } else if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       try {
         final List result = await _channel.invokeMethod('pairedbluetooths');
-        //print("llego: $result");
+        //if(kDebugMode) print("llego: $result");
         for (String item in result) {
           List<String> info = item.split("#");
           String name = info[0];
@@ -58,7 +59,7 @@ class PrintBluetoothThermal {
           items.add(BluetoothInfo(name: name, macAdress: mac));
         }
       } on PlatformException catch (e) {
-        print("Fail pairedBluetooths: '${e.message}'.");
+        if (kDebugMode) print("Fail pairedBluetooths: '${e.message}'.");
       }
     }
 
@@ -73,10 +74,10 @@ class PrintBluetoothThermal {
     } else {
       try {
         final bool result = await _channel.invokeMethod('connectionstatus');
-        //print("llego: $result");
+        //if(kDebugMode) print("llego: $result");
         return result;
       } on PlatformException catch (e) {
-        print("Failed state conecction: '${e.message}'.");
+        if (kDebugMode) print("Failed state conecction: '${e.message}'.");
         return false;
       }
     }
@@ -93,15 +94,15 @@ class PrintBluetoothThermal {
     } else {
       try {
         result = await _channel.invokeMethod('connect', mac);
-        print("result status connect: $result");
+        if (kDebugMode) print("result status connect: $result");
       } on PlatformException catch (e) {
-        print("Failed to connect: ${e.message}");
+        if (kDebugMode) print("Failed to connect: ${e.message}");
       }
     }
     return result;
   }
 
-  ///send bytes to print, esc_pos_utils_plus package must be used, returns true if successful
+  ///send bytes to if(kDebugMode) print, esc_pos_utils_plus package must be used, returns true if successful
   static Future<bool> writeBytes(List<int> bytes) async {
     //enviar bytes a la impresora
     if (Platform.isWindows) {
@@ -110,15 +111,15 @@ class PrintBluetoothThermal {
       try {
         return await _channel.invokeMethod('writebytes', bytes);
       } on PlatformException catch (e) {
-        print("Failed to write bytes: '${e.message}'.");
+        if (kDebugMode) print("Failed to write bytes: '${e.message}'.");
         return false;
       }
     }
   }
 
-  ///Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%)
+  ///Strings are sent to be printed by the PrintTextSize class can if(kDebugMode) print from size 1 (50%) to size 5 (400%)
   static Future<bool> writeString({required PrintTextSize printText}) async {
-    ///EN: you must send the enter \n to print the complete phrase, it is not sent automatically because you may want to add several
+    ///EN: you must send the enter \n to if(kDebugMode) print the complete phrase, it is not sent automatically because you may want to add several
     /// horizontal values ​​of different size
     ///ES: se debe enviar el enter \n para que imprima la frase completa, no se envia automatico por que tal vez quiera agregar varios
     ///valores horizontales de diferente tamaño
@@ -127,11 +128,11 @@ class PrintBluetoothThermal {
 
     String textFinal = "$size///$text";
 
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       try {
         return await _channel.invokeMethod('printstring', textFinal);
       } on PlatformException catch (e) {
-        print("Failed to printsext: '${e.message}'.");
+        if (kDebugMode) print("Failed to printsext: '${e.message}'.");
         return false;
       }
     } else {
@@ -142,7 +143,7 @@ class PrintBluetoothThermal {
   ///gets the android version where it is running, returns String
   static Future<String> get platformVersion async {
     String version = "";
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       version = await _channel.invokeMethod('getPlatformVersion');
     }
     return version;
@@ -156,24 +157,24 @@ class PrintBluetoothThermal {
     } else if (Platform.isAndroid || Platform.isIOS) {
       try {
         result = await _channel.invokeMethod('getBatteryLevel');
-        //print("llego: $result");
+        //if(kDebugMode) print("llego: $result");
       } on PlatformException catch (e) {
-        print("Failed to get battery level: '${e.message}'.");
+        if (kDebugMode) print("Failed to get battery level: '${e.message}'.");
       }
     }
     return result;
   }
 
-  ///disconnect print
+  ///disconnect if(kDebugMode) print
   static Future<bool> get disconnect async {
     if (Platform.isWindows) {
       return await PrintBluetoothThermalWindows.disconnect();
     }
     try {
       return await _channel.invokeMethod('disconnect');
-      //print("llego: $result");
+      //if(kDebugMode) print("llego: $result");
     } on PlatformException catch (e) {
-      print("Failed to disconnect: '${e.message}'.");
+      if (kDebugMode) print("Failed to disconnect: '${e.message}'.");
       return false;
     }
   }

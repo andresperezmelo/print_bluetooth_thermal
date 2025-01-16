@@ -28,5 +28,10 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Esta aplicación necesita acceso al Bluetooth para conectarse con dispositivos Bluetooth.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Esta aplicación necesita acceso al Bluetooth para interactuar con dispositivos periféricos, como impresoras térmicas.</string>
+
 </dict>
 </plist>

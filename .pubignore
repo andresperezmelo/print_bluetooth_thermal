@@ -1,0 +1,5 @@
+.dart_tool/
+.idea/
+example/android/
+example/ios/
+example/macos/

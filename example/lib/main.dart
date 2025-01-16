@@ -9,20 +9,22 @@ import 'package:image/image.dart' as img;
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal_windows.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   String _info = "";
   String _msj = '';
   bool connected = false;
   List<BluetoothInfo> items = [];
-  List<String> _options = ["permission bluetooth granted", "bluetooth enabled", "connection status", "update info"];
+  final List<String> _options = ["permission bluetooth granted", "bluetooth enabled", "connection status", "update info"];
 
   String _selectSize = "2";
   final _txtText = TextEditingController(text: "Hello developer");
@@ -89,16 +91,17 @@ class _MyAppState extends State<MyApp> {
         body: SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 3,
               children: [
                 Text('info: $_info\n '),
                 Text(_msj),
                 Row(
                   children: [
-                    Text("Type print"),
-                    SizedBox(width: 10),
+                    const Text("Type print"),
+                    const SizedBox(width: 10),
                     DropdownButton<String>(
                       value: optionprinttype,
                       items: options.map((String option) {
@@ -115,86 +118,89 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        this.getBluetoots();
-                      },
-                      child: Row(
-                        children: [
-                          Visibility(
-                            visible: _progress,
-                            child: SizedBox(
-                              width: 25,
-                              height: 25,
-                              child: CircularProgressIndicator.adaptive(strokeWidth: 1, backgroundColor: Colors.white),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          getBluetoots();
+                        },
+                        child: Row(
+                          children: [
+                            Visibility(
+                              visible: _progress,
+                              child: const SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: CircularProgressIndicator.adaptive(strokeWidth: 1, backgroundColor: Colors.blue),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 5),
-                          Text(_progress ? _msjprogress : "Search"),
-                        ],
+                            const SizedBox(width: 5),
+                            Text(_progress ? _msjprogress : "Search"),
+                          ],
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: connected ? this.disconnect : null,
-                      child: Text("Disconnect"),
-                    ),
-                    ElevatedButton(
-                      onPressed: connected ? this.printTest : null,
-                      child: Text("Test"),
-                    ),
-                  ],
+                      ElevatedButton(
+                        onPressed: connected ? disconnect : null,
+                        child: const Text("Disconnect"),
+                      ),
+                      ElevatedButton(
+                        onPressed: connected ? printTest : null,
+                        child: const Text("Test"),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                     height: 200,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      color: Colors.grey.withAlpha(50),
                     ),
                     child: ListView.builder(
-                      itemCount: items.length > 0 ? items.length : 0,
+                      itemCount: items.isNotEmpty ? items.length : 0,
                       itemBuilder: (context, index) {
                         return ListTile(
                           onTap: () {
                             String mac = items[index].macAdress;
-                            this.connect(mac);
+                            connect(mac);
                           },
                           title: Text('Name: ${items[index].name}'),
                           subtitle: Text("macAddress: ${items[index].macAdress}"),
                         );
                       },
                     )),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Container(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    color: Colors.grey.withAlpha(50),
                   ),
                   child: Column(children: [
-                    Text("Text size without the library without external packets, print images still it should not use a library"),
-                    SizedBox(height: 10),
+                    const Text("Text size without the library without external packets, print images still it should not use a library"),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: _txtText,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               border: OutlineInputBorder(),
                               labelText: "Text",
                             ),
                           ),
                         ),
-                        SizedBox(width: 5),
+                        const SizedBox(width: 5),
                         DropdownButton<String>(
-                          hint: Text('Size'),
+                          hint: const Text('Size'),
                           value: _selectSize,
                           items: <String>['1', '2', '3', '4', '5'].map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: new Text(value),
+                              child: Text(value),
                             );
                           }).toList(),
                           onChanged: (String? select) {
@@ -206,12 +212,12 @@ class _MyAppState extends State<MyApp> {
                       ],
                     ),
                     ElevatedButton(
-                      onPressed: connected ? this.printWithoutPackage : null,
-                      child: Text("Print"),
+                      onPressed: connected ? printWithoutPackage : null,
+                      child: const Text("Print"),
                     ),
                   ]),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -246,7 +252,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     setState(() {
-      _info = platformVersion + " ($porcentbatery% battery)";
+      _info = "$platformVersion ($porcentbatery% battery)";
     });
   }
 
@@ -335,8 +341,8 @@ class _MyAppState extends State<MyApp> {
       //size of 1-5
       String text = "Hello";
       await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: text + " size 2"));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: text + " size 3"));
+      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: "$text size 2"));
+      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: "$text size 3"));
     } else {
       //desconectado
       print("desconectado bluetooth $conexionStatus");
@@ -366,31 +372,31 @@ class _MyAppState extends State<MyApp> {
     //bytes += generator.image(image!);
 
     bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text('Special 2: blåbærgrød', styles: PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text('Special 2: blåbærgrød', styles: const PosStyles(codeTable: 'CP1252'));
 
-    bytes += generator.text('Bold text', styles: PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: PosStyles(align: PosAlign.right), linesAfter: 1);
+    bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
+    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
+    bytes += generator.text('Underlined text', styles: const PosStyles(underline: true), linesAfter: 1);
+    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
+    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Align right', styles: const PosStyles(align: PosAlign.right), linesAfter: 1);
 
     bytes += generator.row([
       PosColumn(
         text: 'col3',
         width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
+        styles: const PosStyles(align: PosAlign.center, underline: true),
       ),
       PosColumn(
         text: 'col6',
         width: 6,
-        styles: PosStyles(align: PosAlign.center, underline: true),
+        styles: const PosStyles(align: PosAlign.center, underline: true),
       ),
       PosColumn(
         text: 'col3',
         width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
+        styles: const PosStyles(align: PosAlign.center, underline: true),
       ),
     ]);
 
@@ -404,19 +410,19 @@ class _MyAppState extends State<MyApp> {
 
     bytes += generator.text(
       'Text size 50%',
-      styles: PosStyles(
+      styles: const PosStyles(
         fontType: PosFontType.fontB,
       ),
     );
     bytes += generator.text(
       'Text size 100%',
-      styles: PosStyles(
+      styles: const PosStyles(
         fontType: PosFontType.fontA,
       ),
     );
     bytes += generator.text(
       'Text size 200%',
-      styles: PosStyles(
+      styles: const PosStyles(
         height: PosTextSize.size2,
         width: PosTextSize.size2,
       ),
@@ -458,7 +464,7 @@ class _MyAppState extends State<MyApp> {
     //impresion sin paquete solo de PrintBluetoothTermal
     bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
     if (connectionStatus) {
-      String text = _txtText.text.toString() + "\n";
+      String text = "${_txtText.text}\n";
       bool result = await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: int.parse(_selectSize), text: text));
       print("status print result: $result");
       setState(() {
