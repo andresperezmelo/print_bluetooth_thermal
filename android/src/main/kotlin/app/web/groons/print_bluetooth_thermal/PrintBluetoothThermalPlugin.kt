@@ -114,7 +114,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
       if(outputStream != null) {
         try{
           outputStream?.run {
-            write(" ".toByteArray())
+            write("".toByteArray())
             result.success(true)
             //Log.d(TAG, "paso yes coexion ")
           }
