@@ -1,12 +1,8 @@
 package app.web.groons.print_bluetooth_thermal
 
 import android.Manifest
-import android.app.Activity
-import android.app.Activity.RESULT_OK
-import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -16,32 +12,26 @@ import android.os.BatteryManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.NonNull
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry
-import io.flutter.plugin.common.PluginRegistry.Registrar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.OutputStream
-import java.util.*
+import java.util.UUID
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+
 
 private const val TAG = "====> print: "
 private var outputStream: OutputStream? = null
 private lateinit var mac: String
-//val REQUEST_ENABLE_BT = 2
 
-/** PrintBluetoothThermalPlugin */
-class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
+/** PrintTestPlugin */
+class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -56,14 +46,13 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
   private var activeResult: Result? = null
   private var permissionGranted: Boolean = false
 
-  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "groons.web.app/print")
     channel.setMethodCallHandler(this)
     this.mContext = flutterPluginBinding.applicationContext
   }
 
-  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-
+  override fun onMethodCall(call: MethodCall, result: Result) {
     var sdkversion:Int = Build.VERSION.SDK_INT;
     var androidVersion:String = android.os.Build.VERSION.RELEASE;
     activeResult = result
@@ -265,14 +254,18 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
     }
   }
 
+
   private fun getBatteryLevel(): Int {
     val batteryLevel: Int
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       val batteryManager = mContext?.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
       batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
     } else {
-      val intent = ContextWrapper(mContext?.applicationContext).registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-      batteryLevel = intent!!.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100 / intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+      val intent = ContextWrapper(mContext?.applicationContext).registerReceiver(null, IntentFilter(
+        Intent.ACTION_BATTERY_CHANGED)
+      )
+      batteryLevel = intent!!.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100 / intent.getIntExtra(
+        BatteryManager.EXTRA_SCALE, -1)
     }
 
     return batteryLevel
@@ -412,8 +405,8 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler{
     }
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
-
 }

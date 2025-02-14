@@ -1,0 +1,2 @@
+/Users/andresperezmelo/Documents/GitHub/print_bluetooth_thermal/example/android/app/.cxx/Debug/1t3z3f15/x86/CMakeFiles/edit_cache.dir
+/Users/andresperezmelo/Documents/GitHub/print_bluetooth_thermal/example/android/app/.cxx/Debug/1t3z3f15/x86/CMakeFiles/rebuild_cache.dir

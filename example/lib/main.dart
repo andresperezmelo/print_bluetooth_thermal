@@ -99,6 +99,7 @@ class MyAppState extends State<MyApp> {
                 Text('info: $_info\n '),
                 Text(_msj),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Type print"),
                     const SizedBox(width: 10),
@@ -121,7 +122,7 @@ class MyAppState extends State<MyApp> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    spacing: 5,
                     children: [
                       ElevatedButton(
                         onPressed: () {
