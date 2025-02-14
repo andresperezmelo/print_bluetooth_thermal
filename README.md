@@ -215,13 +215,12 @@ Future<List<int>> testTicket() async {
 ```
 
 # Screenshot of the example app, you can copy the code from the example
-![App example Android](https://github.com/andresperezmelo/print_bluetooth_thermal/blob/main/myapp.png)
-![App example IOS](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print_iphone.jpg)
+![App example Android](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/myapp.png)
 # Ticket printed with various sizes
-![Print sizes](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/size.jpeg)
+![Print sizes](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/size.jpeg)
 # Ticket printed with various forms
-![Use package print_bluetooth_thermal 58 mm](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print.jpeg)
-![Use package print_bluetooth_thermal 80 mm](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/print80mm.jpg)
+![Use package print_bluetooth_thermal 58 mm](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print.jpeg)
+![Use package print_bluetooth_thermal 80 mm](hhttps://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print80mm.jpg)
 
 
 # Built with 🛠️
@@ -234,7 +233,7 @@ _Thanks to these tools this fabulous project has been created_
 * [Flutter](https://flutter.dev/) - framework used
 
 # Donate
-[![Donate](https://github.com/andresperezmelo/print_bluetooth_termal/blob/main/Donate_PayPal.png)](https://www.paypal.com/donate/?hosted_button_id=8UMQ755US94XL)
+[![Donate](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/Donate_PayPal.png)](https://www.paypal.com/donate/?hosted_button_id=8UMQ755US94XL)
 
 # License
 Note: This license has also been called the "New BSD License" or "Modified BSD License". See also the 2-clause BSD License.

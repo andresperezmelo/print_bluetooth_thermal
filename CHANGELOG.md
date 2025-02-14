@@ -1,3 +1,11 @@
+## [1.1.6]
+1. Update Api v2 de flutter for Android
+2. 2025/02/14
+
+## [1.1.5]
+1. Update desing new flutter
+2. 2025/01/16
+
 ## [1.1.4]
 1. Delete package web
 2. update code pull request #52
