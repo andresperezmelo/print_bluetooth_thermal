@@ -220,7 +220,7 @@ Future<List<int>> testTicket() async {
 ![Print sizes](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/size.jpeg)
 # Ticket printed with various forms
 ![Use package print_bluetooth_thermal 58 mm](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print.jpeg)
-![Use package print_bluetooth_thermal 80 mm](hhttps://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print80mm.jpg)
+![Use package print_bluetooth_thermal 80 mm](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print80mm.jpg)
 
 
 # Built with 🛠️
