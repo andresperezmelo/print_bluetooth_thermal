@@ -1,3 +1,18 @@
+## [1.1.7] - 2025-10-16
+
+### 🔧 Improvements
+- Increased Bluetooth data transfer limit from **4 KB to 16 KB**, allowing stable printing of longer texts and images.  
+- Updated to **Android Gradle Plugin 8.6.0** and **Kotlin 2.1.0** for full compatibility with **Flutter 3.35+**.  
+- Optimized native Kotlin code for safer `OutputStream` handling and chunked data transmission.  
+- Removed deprecated or unavailable properties (`sendBufferSize`) from `BluetoothSocket`.  
+- Verified full build compatibility with **Android Studio Koala (AGP 8.6 / Gradle 8.9)**.
+
+### ✅ Compatibility
+- Compatible with **Android 5.0 (API 21)** and above.  
+- Tested with **Flutter 3.35.5** and **Dart 3.9.2**.
+
+---
+
 ## [1.1.6]
 1. Update Api v2 de flutter for Android
 2. 2025/02/14
