@@ -1,3 +1,19 @@
+## [1.1.8] – 2025-12-09
+
+### 🖥️ macOS
+- Enabled macOS platform support.
+- Fixed Bluetooth state handling and permissions.
+- Improved BLE printing (chunking, UUID filtering, write confirmation).
+- Added required Bluetooth entitlements.
+
+### 🔧 General
+- Added FVM configuration.
+- Minor fixes in example and plugin registration.
+
+### ✅ Compatibility
+- Tested on Flutter 3.38+ and real macOS devices.
+
+
 ## [1.1.7] - 2025-10-16
 
 ### 🔧 Improvements
