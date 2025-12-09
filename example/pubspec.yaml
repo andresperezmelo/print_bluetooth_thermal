@@ -30,7 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_esc_pos_utils: ^1.0.1
   win32: ^5.5.4
-  archive: ^3.6.1
+  archive: ^4.0.7
 
 dev_dependencies:
   integration_test:
