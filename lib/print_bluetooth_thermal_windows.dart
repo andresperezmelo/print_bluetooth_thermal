@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:win_ble/win_ble.dart';
 import 'package:win_ble/win_file.dart';
@@ -39,7 +40,7 @@ class PrintBluetoothThermalWindows {
 
     if (_scanStream != null) _scanStream!.cancel();
     _scanStream = WinBle.scanStream.listen((BleDevice event) {
-      //print("device name: ${event.name}");
+      //debugPrint("device name: ${event.name}");
       // Get Devices Here
       bool add = true;
       for (BluetoothInfo bleDevice in _bluetooths) {
@@ -50,7 +51,7 @@ class PrintBluetoothThermalWindows {
         }
       }
       //add bluetooth in list
-      //print("event: ${event.name} add: $add isNotEmpty: ${event.name.trim().isNotEmpty}");
+      //debugPrint("event: ${event.name} add: $add isNotEmpty: ${event.name.trim().isNotEmpty}");
       if (add && event.name.trim().isNotEmpty) {
         _bluetooths.add(BluetoothInfo(name: event.name, macAdress: event.address));
       }
@@ -75,9 +76,9 @@ class PrintBluetoothThermalWindows {
       if (status) {
         //_macAddressConnect = macAddress;
         connectionCompleter.complete(true);
-        print("connect status: $status");
+        debugPrint("connect status: $status");
       } else {
-        //print("Finalizó el stream $event");
+        //debugPrint("Finalizó el stream $event");
         if (!connectionCompleter.isCompleted) connectionCompleter.complete(true); // Completar con error la Future en caso de desconexión.
       }
     });
@@ -90,21 +91,21 @@ class PrintBluetoothThermalWindows {
     //cancelar el stream
     if (_connectionStream != null) _connectionStream?.cancel();
 
-    //print("complete ${DateTime.now().toString()}");
+    //debugPrint("complete ${DateTime.now().toString()}");
     //buscar el servicio y caracteristica para imprimir
     List<String> services = await WinBle.discoverServices(macAddress);
-    //print("Services: ${services.length}");
+    //debugPrint("Services: ${services.length}");
     for (String service in services) {
-      //print("service: $service");
+      //debugPrint("service: $service");
       List<BleCharacteristic> bleCharacteristics = await WinBle.discoverCharacteristics(address: macAddress, serviceId: service);
-      //print("bleCharacteristics: ${bleCharacteristics.length}");
+      //debugPrint("bleCharacteristics: ${bleCharacteristics.length}");
       for (BleCharacteristic characteristic in bleCharacteristics) {
-        //print("service: $service -> bleCharacteristic: ${characteristic.properties.toJson()}");
+        //debugPrint("service: $service -> bleCharacteristic: ${characteristic.properties.toJson()}");
         if (characteristic.properties.write ?? false) {
           _serviceSelect = service;
           _bleCharacteristicSelect = characteristic;
           _macAddressConnect = macAddress;
-          print("macAddress: $macAddress service: $service");
+          debugPrint("macAddress: $macAddress service: $service");
           break;
         }
       }
@@ -116,7 +117,7 @@ class PrintBluetoothThermalWindows {
   static Future<bool> writeBytes({required List<int> bytes}) async {
     // To Write Characteristic
     try {
-      print("Writing: _macAddressConnect: $_macAddressConnect service: $_serviceSelect caractericsUid: ${_bleCharacteristicSelect?.uuid}");
+      debugPrint("Writing: _macAddressConnect: $_macAddressConnect service: $_serviceSelect caractericsUid: ${_bleCharacteristicSelect?.uuid}");
       await WinBle.write(
         address: _macAddressConnect,
         service: _serviceSelect,
@@ -126,7 +127,7 @@ class PrintBluetoothThermalWindows {
       );
       return true;
     } catch (e) {
-      print("PrintBluettothTermalWindows.writyBytes -> error: $e");
+      debugPrint("PrintBluettothTermalWindows.writyBytes -> error: $e");
       disconnect();
       return false;
     }
@@ -144,6 +145,6 @@ class PrintBluetoothThermalWindows {
   }
 
   static Future<void> notImplemented() async {
-    print("Not implemented on Windows");
+    debugPrint("Not implemented on Windows");
   }
 }
