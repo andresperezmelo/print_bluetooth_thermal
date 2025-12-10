@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth access to interact with thermal printers</string>
 </dict>
 </plist>

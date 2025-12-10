@@ -1,6 +1,6 @@
 # print_bluetooth_thermal
 
-## Package to print tickets on 58mm or 80mm thermal printers on Android or IOS.
+## Package to print tickets on 58mm or 80mm thermal printers on Android, iOS, macOS or Windows.
 
 This package emerged as an alternative to the current ones that use the location permission and Google Play
 blocks apps that don't explain what to use location permission for.
@@ -13,11 +13,28 @@ blocks apps that don't explain what to use location permission for.
 
 * If you want to print images, qr code, barcode use the package [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
 
-#Configure in IOS
-> In Info.plist add line in folder/ios/runner/info.plist
-``` dart
+# Configure on iOS
+> Add the following keys in `ios/Runner/Info.plist`:
+```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
 <string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Bluetooth access to interact with thermal printers</string>
+```
+
+# Configure on macOS
+> 1. Add the following keys in `macos/Runner/Info.plist`:
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Bluetooth access to interact with thermal printers</string>
+```
+
+> 2. Add the Bluetooth entitlement in both `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`:
+```xml
+<key>com.apple.security.device.bluetooth</key>
+<true/>
 ```
 
 1. Import the package
@@ -49,18 +66,18 @@ PrintBluetoothThermal
 | PrintBluetoothThermal.batteryLevel | Get the percentage of the battery returns int |
 
 # Available commands by platform
-| Function | Android | iOS | Windows |
-|----------|:-------:|:---:|:-------:|
-| PrintBluetoothThermal.isPermissionBluetoothGranted |    ✅   |  ✅  |    ❌    |
-| PrintBluetoothThermal.bluetoothEnabled |    ✅   |  ✅  |    ❌    |
-| PrintBluetoothThermal.pairedBluetooths |    ✅   |  ✅  |    ✅    |
-| PrintBluetoothThermal.connectionStatus |    ✅   |  ✅  |    ✅    |
-| PrintBluetoothThermal.connect |    ✅   |  ✅  |    ✅    |
-| PrintBluetoothThermal.writeBytes |    ✅   |  ✅  |    ✅    |
-| PrintBluetoothThermal.writeString |    ✅   |  ✅  |    ❌    |
-| PrintBluetoothThermal.disconnect |    ✅   |  ✅  |    ✅    |
-| PrintBluetoothThermal.platformVersion |    ✅   |  ✅  |    ❌    |
-| PrintBluetoothThermal.batteryLevel |    ✅   |  ✅  |    ❌    |
+| Function | Android | iOS | macOS | Windows |
+|----------|:-------:|:---:|:-----:|:-------:|
+| PrintBluetoothThermal.isPermissionBluetoothGranted |    ✅   |  ✅  |   ✅   |    ❌    |
+| PrintBluetoothThermal.bluetoothEnabled |    ✅   |  ✅  |   ✅   |    ❌    |
+| PrintBluetoothThermal.pairedBluetooths |    ✅   |  ✅  |   ✅   |    ✅    |
+| PrintBluetoothThermal.connectionStatus |    ✅   |  ✅  |   ✅   |    ✅    |
+| PrintBluetoothThermal.connect |    ✅   |  ✅  |   ✅   |    ✅    |
+| PrintBluetoothThermal.writeBytes |    ✅   |  ✅  |   ✅   |    ✅    |
+| PrintBluetoothThermal.writeString |    ✅   |  ✅  |   ✅   |    ❌    |
+| PrintBluetoothThermal.disconnect |    ✅   |  ✅  |   ✅   |    ✅    |
+| PrintBluetoothThermal.platformVersion |    ✅   |  ✅  |   ✅   |    ❌    |
+| PrintBluetoothThermal.batteryLevel |    ✅   |  ✅  |   ❌   |    ❌    |
 
 
 # Examples
