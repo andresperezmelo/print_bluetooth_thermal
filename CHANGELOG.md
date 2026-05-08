@@ -3,6 +3,11 @@
 * **iOS**: Updated minimum deployment target to 13.0 to support SPM requirements.
 * **Maintenance**: Maintained CocoaPods compatibility via `.podspec` for backward compatibility.
 
+## [1.2.0] – 2026-05-08
+* **Feat**: Added support for Swift Package Manager (SPM) for iOS, ensuring compatibility with Flutter 3.44+.
+* **iOS/macOS**: Updated minimum deployment targets to support SPM requirements (iOS 13.0 / macOS 10.15).
+* **Maintenance**: Maintained CocoaPods compatibility via `.podspec` for backward compatibility.
+
 ## [1.1.9] – 2025-12-10
 - Updated to README.md.
 
