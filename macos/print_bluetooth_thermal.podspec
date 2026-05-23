@@ -1,20 +1,19 @@
-#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint print_bluetooth_thermal.podspec` to validate before publishing.
-#
 Pod::Spec.new do |s|
   s.name             = 'print_bluetooth_thermal'
   s.version          = '0.0.1'
-  s.summary          = 'Print tickets for thermal'
+  s.summary          = 'Impresion de macOS'
   s.description      = <<-DESC
-Print tickets for thermal
+Impresion de macOS
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
 
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  
+  # Apunta al nuevo directorio configurado para SPM
+  s.source_files     = 'print_bluetooth_thermal/Sources/print_bluetooth_thermal/**/*.swift'
+
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.15'

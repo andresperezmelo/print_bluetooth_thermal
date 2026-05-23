@@ -2,7 +2,8 @@ import Flutter
 import UIKit
 import CoreBluetooth
 
-public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,  FlutterPlugin {
+@objc(PrintBluetoothThermalPlugin)
+public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,  FlutterPlugin {
     var centralManager: CBCentralManager?  // Define una variable para guardar el gestor central de bluetooth
     var discoveredDevices: [String] = []  //lista de bluetooths encontrados
     var connectedPeripheral: CBPeripheral!  //dispositivo conectado
@@ -23,7 +24,7 @@ public class SwiftPrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegat
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())
-    let instance = SwiftPrintBluetoothThermalPlugin()
+    let instance = PrintBluetoothThermalPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

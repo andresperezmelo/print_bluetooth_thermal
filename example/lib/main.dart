@@ -20,14 +20,16 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  String _info = "";
+  String _info = "Loading system info...";
   String _msj = '';
   bool connected = false;
   List<BluetoothInfo> items = [];
-  final List<String> _options = ["permission bluetooth granted", "bluetooth enabled", "connection status", "update info"];
+
+  // Opciones del menú corregidas gramaticalmente
+  final List<String> _options = ["Check Bluetooth Permission", "Check Bluetooth State", "Check Connection Status", "Refresh Platform Info"];
 
   String _selectSize = "2";
-  final _txtText = TextEditingController(text: "Hello developer");
+  final _txtText = TextEditingController(text: "Hello Developer!");
   bool _progress = false;
   String _msjprogress = "";
 
@@ -43,37 +45,40 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.light,
+        ),
+      ),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Thermal Printer Utility'),
+          centerTitle: true,
           actions: [
             PopupMenuButton(
-              elevation: 3.2,
-              //initialValue: _options[1],
-              onCanceled: () {
-                debugPrint('You have not chossed anything');
-              },
-              tooltip: 'Menu',
+              elevation: 4,
+              tooltip: 'More Options',
               onSelected: (Object select) async {
                 String sel = select as String;
-                if (sel == "permission bluetooth granted") {
+                if (sel == "Check Bluetooth Permission") {
                   bool status = await PrintBluetoothThermal.isPermissionBluetoothGranted;
                   setState(() {
-                    _info = "permission bluetooth granted: $status";
+                    _info = "Bluetooth Permission Granted: $status";
                   });
-                  //open setting permision if not granted permision
-                } else if (sel == "bluetooth enabled") {
+                } else if (sel == "Check Bluetooth State") {
                   bool state = await PrintBluetoothThermal.bluetoothEnabled;
                   setState(() {
-                    _info = "Bluetooth enabled: $state";
+                    _info = "Bluetooth Enabled: $state";
                   });
-                } else if (sel == "update info") {
+                } else if (sel == "Refresh Platform Info") {
                   initPlatformState();
-                } else if (sel == "connection status") {
+                } else if (sel == "Check Connection Status") {
                   final bool result = await PrintBluetoothThermal.connectionStatus;
                   connected = result;
                   setState(() {
-                    _info = "connection status: $result";
+                    _info = "Connection Status: $result";
                   });
                 }
               },
@@ -89,138 +94,318 @@ class MyAppState extends State<MyApp> {
           ],
         ),
         body: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 3,
-              children: [
-                Text('info: $_info\n '),
-                Text(_msj),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("Type print"),
-                    const SizedBox(width: 10),
-                    DropdownButton<String>(
-                      value: optionprinttype,
-                      items: options.map((String option) {
-                        return DropdownMenuItem<String>(
-                          value: option,
-                          child: Text(option),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          optionprinttype = newValue!;
-                        });
-                      },
-                    ),
-                  ],
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // CARD 1: Status & Info
+              Card(
+                elevation: 0,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
                 ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    spacing: 5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          getBluetoots();
-                        },
-                        child: Row(
-                          children: [
-                            Visibility(
-                              visible: _progress,
-                              child: const SizedBox(
-                                width: 25,
-                                height: 25,
-                                child: CircularProgressIndicator.adaptive(strokeWidth: 1, backgroundColor: Colors.blue),
-                              ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Printer Status",
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: connected ? Colors.green.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            const SizedBox(width: 5),
-                            Text(_progress ? _msjprogress : "Search"),
-                          ],
-                        ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  connected ? Icons.check_circle : Icons.cancel,
+                                  color: connected ? Colors.green : Colors.grey[700],
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  connected ? "CONNECTED" : "DISCONNECTED",
+                                  style: TextStyle(
+                                    color: connected ? Colors.green[800] : Colors.grey[800],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      ElevatedButton(
-                        onPressed: connected ? disconnect : null,
-                        child: const Text("Disconnect"),
+                      const Divider(height: 24),
+                      Text(
+                        _msj,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
-                      ElevatedButton(
-                        onPressed: connected ? printTest : null,
-                        child: const Text("Test"),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Info: $_info",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: Colors.grey.withAlpha(50),
-                    ),
-                    child: ListView.builder(
-                      itemCount: items.isNotEmpty ? items.length : 0,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          onTap: () {
-                            String mac = items[index].macAdress;
-                            connect(mac);
-                          },
-                          title: Text('Name: ${items[index].name}'),
-                          subtitle: Text("macAddress: ${items[index].macAdress}"),
-                        );
-                      },
-                    )),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    color: Colors.grey.withAlpha(50),
-                  ),
-                  child: Column(children: [
-                    const Text("Text size without the library without external packets, print images still it should not use a library"),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _txtText,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: "Text",
-                            ),
+              ),
+              const SizedBox(height: 12),
+
+              // CARD 2: Printing Preferences (Width)
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.settings_ethernet, color: Theme.of(context).colorScheme.secondary),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Paper Width:",
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                           ),
+                        ],
+                      ),
+                      DropdownButton<String>(
+                        value: optionprinttype,
+                        underline: const SizedBox(), // Removes the default line
+                        items: options.map((String option) {
+                          return DropdownMenuItem<String>(
+                            value: option,
+                            child: Text(option, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            optionprinttype = newValue!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // CARD 3: Bluetooth Search & Devices List
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Available Printers",
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          FilledButton.icon(
+                            onPressed: _progress ? null : getBluetoots,
+                            icon: _progress
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.search, size: 18),
+                            label: Text(_progress ? _msjprogress : "Search"),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
                         ),
-                        const SizedBox(width: 5),
-                        DropdownButton<String>(
-                          hint: const Text('Size'),
-                          value: _selectSize,
-                          items: <String>['1', '2', '3', '4', '5'].map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (String? select) {
-                            setState(() {
-                              _selectSize = select.toString();
-                            });
-                          },
+                        child: items.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.print_disabled, size: 40, color: Colors.grey[400]),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "No paired devices found",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Link the printer in settings, then press Search.",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.all(8),
+                                itemCount: items.length,
+                                separatorBuilder: (context, index) => const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final item = items[index];
+                                  return ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    leading: CircleAvatar(
+                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                      child: Icon(Icons.print, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 20),
+                                    ),
+                                    title: Text(
+                                      item.name.isNotEmpty ? item.name : "Unknown Device",
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    subtitle: Text(
+                                      "MAC: ${item.macAdress}",
+                                      style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.grey[600]),
+                                    ),
+                                    trailing: const Icon(Icons.chevron_right, size: 18),
+                                    onTap: () => connect(item.macAdress),
+                                  );
+                                },
+                              ),
+                      ),
+                      if (connected) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: disconnect,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Theme.of(context).colorScheme.error,
+                                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                                ),
+                                icon: const Icon(Icons.power_settings_new, size: 18),
+                                label: const Text("Disconnect"),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: printTest,
+                                icon: const Icon(Icons.receipt_long, size: 18),
+                                label: const Text("Test Print"),
+                              ),
+                            ),
+                          ],
                         )
                       ],
-                    ),
-                    ElevatedButton(
-                      onPressed: connected ? printWithoutPackage : null,
-                      child: const Text("Print"),
-                    ),
-                  ]),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-              ],
-            ),
+              ),
+              const SizedBox(height: 12),
+
+              // CARD 4: Custom Raw Text Printing
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        "Direct Raw Printing",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Send raw text natively without external templates.",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _txtText,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                labelText: "Message",
+                                hintText: "Write something...",
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Theme.of(context).colorScheme.outline, width: 0.8),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                hint: const Text('Size'),
+                                value: _selectSize,
+                                items: <String>['1', '2', '3', '4', '5'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text("Size $value", style: const TextStyle(fontSize: 14)),
+                                  );
+                                }).toList(),
+                                onChanged: (String? select) {
+                                  setState(() {
+                                    _selectSize = select.toString();
+                                  });
+                                },
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: connected ? printWithoutPackage : null,
+                        icon: const Icon(Icons.send_rounded, size: 18),
+                        label: const Text("Send Plain Text"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
@@ -230,54 +415,44 @@ class MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     String platformVersion;
     int porcentbatery = 0;
-    // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await PrintBluetoothThermal.platformVersion;
-      //debugPrint("patformversion: $platformVersion");
       porcentbatery = await PrintBluetoothThermal.batteryLevel;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     final bool result = await PrintBluetoothThermal.bluetoothEnabled;
     debugPrint("bluetooth enabled: $result");
     if (result) {
-      _msj = "Bluetooth enabled, please search and connect";
+      _msj = "Bluetooth enabled, search for devices to connect.";
     } else {
-      _msj = "Bluetooth not enabled";
+      _msj = "Bluetooth is disabled. Please turn it on.";
     }
 
     setState(() {
-      _info = "$platformVersion ($porcentbatery% battery)";
+      _info = "$platformVersion ($porcentbatery% Battery)";
     });
   }
 
   Future<void> getBluetoots() async {
     setState(() {
       _progress = true;
-      _msjprogress = "Wait";
+      _msjprogress = "Searching...";
       items = [];
     });
     final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
-
-    /*await Future.forEach(listResult, (BluetoothInfo bluetooth) {
-      String name = bluetooth.name;
-      String mac = bluetooth.macAdress;
-    });*/
 
     setState(() {
       _progress = false;
     });
 
     if (listResult.isEmpty) {
-      _msj = "There are no bluetoohs linked, go to settings and link the printer";
+      _msj = "No paired devices found. Please link the printer in settings.";
     } else {
-      _msj = "Touch an item in the list to connect";
+      _msj = "Select a printer from the list to connect.";
     }
 
     setState(() {
@@ -292,7 +467,7 @@ class MyAppState extends State<MyApp> {
       connected = false;
     });
     final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
-    debugPrint("state conected $result");
+    debugPrint("state connected: $result");
     if (result) connected = true;
     setState(() {
       _progress = false;
@@ -304,17 +479,11 @@ class MyAppState extends State<MyApp> {
     setState(() {
       connected = false;
     });
-    debugPrint("status disconnect $status");
+    debugPrint("status disconnect: $status");
   }
 
   Future<void> printTest() async {
-    /*if (kDebugMode) {
-      bool result = await PrintBluetoothThermalWindows.writeBytes(bytes: "Hello \n".codeUnits);
-      return;
-    }*/
-
     bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
-    //debugPrint("connection status: $conexionStatus");
     if (conexionStatus) {
       bool result = false;
       if (Platform.isWindows) {
@@ -326,11 +495,10 @@ class MyAppState extends State<MyApp> {
       }
       debugPrint("print test result:  $result");
     } else {
-      debugPrint("print test conexionStatus: $conexionStatus");
+      debugPrint("print test connectionStatus: $conexionStatus");
       setState(() {
         disconnect();
       });
-      //throw Exception("Not device connected");
     }
   }
 
@@ -339,23 +507,19 @@ class MyAppState extends State<MyApp> {
     if (conexionStatus) {
       String enter = '\n';
       await PrintBluetoothThermal.writeBytes(enter.codeUnits);
-      //size of 1-5
       String text = "Hello";
       await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text));
       await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: "$text size 2"));
       await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: "$text size 3"));
     } else {
-      //desconectado
-      debugPrint("desconectado bluetooth $conexionStatus");
+      debugPrint("Bluetooth disconnected $conexionStatus");
     }
   }
 
   Future<List<int>> testTicket() async {
     List<int> bytes = [];
-    // Using default profile
     final profile = await CapabilityProfile.load();
     final generator = Generator(optionprinttype == "58 mm" ? PaperSize.mm58 : PaperSize.mm80, profile);
-    //bytes += generator.setGlobalFont(PosFontType.fontA);
     bytes += generator.reset();
 
     final ByteData data = await rootBundle.load('assets/mylogo.jpg');
@@ -363,14 +527,9 @@ class MyAppState extends State<MyApp> {
     img.Image? image = img.decodeImage(bytesImg);
 
     if (Platform.isIOS) {
-      // Resizes the image to half its original size and reduces the quality to 80%
       final resizedImage = img.copyResize(image!, width: image.width ~/ 1.3, height: image.height ~/ 1.3, interpolation: img.Interpolation.nearest);
       final bytesimg = Uint8List.fromList(img.encodeJpg(resizedImage));
-      //image = img.decodeImage(bytesimg);
     }
-
-    //Using `ESC *`
-    //bytes += generator.image(image!);
 
     bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
     bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: const PosStyles(codeTable: 'CP1252'));
@@ -401,12 +560,8 @@ class MyAppState extends State<MyApp> {
       ),
     ]);
 
-    //barcode
-
     final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
     bytes += generator.barcode(Barcode.upcA(barData));
-
-    //QR code
     bytes += generator.qrcode('example.com');
 
     bytes += generator.text(
@@ -430,7 +585,6 @@ class MyAppState extends State<MyApp> {
     );
 
     bytes += generator.feed(2);
-    //bytes += generator.cut();
     return bytes;
   }
 
@@ -445,38 +599,33 @@ class MyAppState extends State<MyApp> {
     bytes += PostCode.text(text: "Size big", fontSize: FontSize.big);
     bytes += PostCode.enter();
 
-    //List of rows
     bytes += PostCode.row(texts: ["PRODUCT", "VALUE"], proportions: [60, 40], fontSize: FontSize.compressed);
     for (int i = 0; i < 3; i++) {
       bytes += PostCode.row(texts: ["Item $i", "$i,00"], proportions: [60, 40], fontSize: FontSize.compressed);
     }
 
     bytes += PostCode.line();
-
     bytes += PostCode.barcode(barcodeData: "123456789");
     bytes += PostCode.qr("123456789");
-
     bytes += PostCode.enter(nEnter: 5);
 
     return bytes;
   }
 
   Future<void> printWithoutPackage() async {
-    //impresion sin paquete solo de PrintBluetoothTermal
     bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
     if (connectionStatus) {
       String text = "${_txtText.text}\n";
       bool result = await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: int.parse(_selectSize), text: text));
-      debugPrint("status print result: $result");
+      debugPrint("print raw text result: $result");
       setState(() {
-        _msj = "printed status: $result";
+        _msj = "Printed successfully: $result";
       });
     } else {
-      //no conectado, reconecte
       setState(() {
-        _msj = "no connected device";
+        _msj = "Error: No connected device found.";
       });
-      debugPrint("no conectado");
+      debugPrint("Not connected");
     }
   }
 }

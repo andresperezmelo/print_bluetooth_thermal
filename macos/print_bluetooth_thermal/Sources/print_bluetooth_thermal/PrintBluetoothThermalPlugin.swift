@@ -2,6 +2,7 @@ import FlutterMacOS
 import AppKit
 import CoreBluetooth
 
+@objc(PrintBluetoothThermalPlugin)
 public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, FlutterPlugin {
     var centralManager: CBCentralManager?
     var discoveredDevices: [String] = []

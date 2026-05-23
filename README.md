@@ -5,7 +5,17 @@
 This package emerged as an alternative to the current ones that use the location permission and Google Play
 blocks apps that don't explain what to use location permission for.
 
-> If you want to supply the c++ code, you need to receive raw bytes to use the byte class
+---
+
+> ⚠️ **Important Notice for iOS & macOS Users:**  
+> Starting from version **1.2.2**, this package has migrated to a **100% pure Swift** implementation utilizing **Swift Package Manager (SPM)** to support Flutter 3.44+ and modern Apple environments.  
+> 
+> If your project strictly requires legacy **CocoaPods** integration, please lock your package dependency to version **1.2.1** in your `pubspec.yaml`:
+> ```yaml
+> print_bluetooth_thermal: 1.2.1
+> ```
+
+---
 
 ## Getting Started
 

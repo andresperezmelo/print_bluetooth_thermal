@@ -1,3 +1,15 @@
+## [1.2.2] – 2026-05-22
+
+* **Refactor (iOS & macOS)**: Migrated native iOS and macOS codebases to be **100% pure Swift**.
+* **Fix**: Removed legacy Objective-C files (`.h` and `.m` bridge files) to resolve target compilation conflicts in Swift Package Manager (SPM), addressing the "Unknown receiver 'PrintBluetoothThermalPlugin'" error.
+* **Breaking Change**: Transitioned fully to Swift Package Manager (SPM) as the primary integration method. 
+* **Note**: If your project strictly requires legacy CocoaPods integration, please lock your package dependency to version **1.2.1**.
+
+## [1.2.1] – 2026-05-08
+* **Feat**: Added support for Swift Package Manager (SPM) for iOS, ensuring compatibility with Flutter 3.44+.
+* **iOS**: Updated minimum deployment target to 13.0 to support SPM requirements.
+* **Maintenance**: Maintained CocoaPods compatibility via `.podspec` for backward compatibility.
+
 ## [1.2.1] – 2026-05-08
 * **Feat**: Added support for Swift Package Manager (SPM) for iOS, ensuring compatibility with Flutter 3.44+.
 * **iOS**: Updated minimum deployment target to 13.0 to support SPM requirements.
