@@ -12,8 +12,6 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
     var targetCharacteristic: CBCharacteristic? // Variable global para almacenar la característica objetivo
 
 
-    var flutterResult: FlutterResult? //para el resul de flutter
-    var bytes: [UInt8]? //variable para almacenar los bytes que llegan
     var stringprint = ""; //variable para almacenar los string que llegan
     var pendingConnectResult: FlutterResult?
     var pendingConnectTimeout: DispatchWorkItem?
@@ -175,9 +173,6 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
           result(false)
           return
         }
-        //let bytes = arguments
-        self.bytes = arguments.map { UInt8($0 & 0xFF) } //No se esta usando
-
         if let characteristic = targetCharacteristic {
             guard connectedPeripheral != nil else {
                 print("No hay periferico conectado")
@@ -185,7 +180,6 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 return
             }
             // Utiliza la variable characteristic desempaquetada aquí
-            //print("bytes count: \(self.bytes?.count)")
             let listbytes = arguments.map { UInt8($0 & 0xFF) }
             //self.connectedPeripheral?.writeValue(Data(listbytes), for: characteristic, type: .withoutResponse) //.withResponse, .withoutResponse
 
@@ -193,17 +187,18 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
             let data: Data = Data(listbytes) // Datos que deseas imprimir
             let chunkSize = 150 // Tamaño de cada fragmento en bytes
 
+            guard let writeType = preferredWriteType(for: characteristic) else {
+                print("La característica no admite escritura")
+                result(false)
+                return
+            }
+
             var offset = 0
             while offset < data.count {
                 let chunkRange = offset..<min(offset + chunkSize, data.count)
                 let chunkData = data.subdata(in: chunkRange)
                 //print("chunkData count: \(chunkData.count)")
                 // Envía el fragmento para imprimir utilizando la característica deseada
-
-                var writeType = CBCharacteristicWriteType.withoutResponse;
-                if characteristic.properties.contains(.write) {
-                   writeType = CBCharacteristicWriteType.withResponse;
-                }
 
                  self.connectedPeripheral?.writeValue(chunkData, for: characteristic, type: writeType)
 
@@ -257,9 +252,10 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                     // Envío de los datos
                     let datasize = Data(sizeBytes[size])
 
-                    var writeType = CBCharacteristicWriteType.withoutResponse;
-                    if characteristic.properties.contains(.write) {
-                        writeType = CBCharacteristicWriteType.withResponse;
+                    guard let writeType = preferredWriteType(for: characteristic) else {
+                        print("La característica no admite escritura")
+                        result(false)
+                        return
                     }
 
                     connectedPeripheral?.writeValue(datasize, for: characteristic, type: writeType)
@@ -301,6 +297,16 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
         pendingConnectResult = nil
         pendingConnectPeripheral = nil
         result(success)
+    }
+
+    private func preferredWriteType(for characteristic: CBCharacteristic) -> CBCharacteristicWriteType? {
+        if characteristic.properties.contains(.write) {
+            return .withResponse
+        }
+        if characteristic.properties.contains(.writeWithoutResponse) {
+            return .withoutResponse
+        }
+        return nil
     }
 
 
@@ -385,6 +391,11 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 //print("characteristics found: \(characteristic.uuid)")
 
                 if allowedCharacteristics.contains(characteristic.uuid) {
+                    guard preferredWriteType(for: characteristic) != nil else {
+                        print("characteristics found: \(characteristic.uuid) La característica no admite escritura")
+                        continue
+                    }
+
                     targetCharacteristic = characteristic // Guarda la característica objetivo en la variable global
                     print("Target characteristic found: \(characteristic.uuid)")
 
@@ -400,7 +411,7 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 }
 
                 if targetCharacteristic == nil && targetService?.uuid == service.uuid {
-                    if characteristic.properties.contains(.write) || characteristic.properties.contains(.writeWithoutResponse) {
+                    if preferredWriteType(for: characteristic) != nil {
                         targetCharacteristic = characteristic
                         print("Using fallback writable characteristic: \(characteristic.uuid)")
                         completePendingConnect(true)

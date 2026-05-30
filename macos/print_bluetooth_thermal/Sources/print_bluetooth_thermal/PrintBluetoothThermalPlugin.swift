@@ -10,8 +10,6 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
     var targetService: CBService?
     var targetCharacteristic: CBCharacteristic?
 
-    var flutterResult: FlutterResult?
-    var bytes: [UInt8]?
     var stringprint = ""
     
     // Pending callbacks for Bluetooth state queries
@@ -162,6 +160,12 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
             let bytesData = arguments.map { UInt8($0 & 0xFF) }
             let data = Data(bytesData)
             
+            guard let writeType = preferredWriteType(for: characteristic) else {
+                print("writebytes: Characteristic does not support write")
+                result(false)
+                return
+            }
+
             // Send in chunks of 150 bytes to avoid overwhelming the printer
             let chunkSize = 150
             var offset = 0
@@ -170,7 +174,6 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 let chunkRange = offset..<min(offset + chunkSize, data.count)
                 let chunkData = data.subdata(in: chunkRange)
                 
-                let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
                 connectedPeripheral.writeValue(chunkData, for: characteristic, type: writeType)
                 
                 offset += chunkSize
@@ -222,7 +225,11 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
             ]
             let resetBytes: [UInt8] = [0x1b, 0x40]
             
-            let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
+            guard let writeType = preferredWriteType(for: characteristic) else {
+                print("printstring: Characteristic does not support write")
+                result(false)
+                return
+            }
             
             // Send size command
             let dataSize = Data(sizeBytes[size])
@@ -254,6 +261,16 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
         pendingConnectResult = nil
         pendingConnectPeripheral = nil
         result(success)
+    }
+
+    private func preferredWriteType(for characteristic: CBCharacteristic) -> CBCharacteristicWriteType? {
+        if characteristic.properties.contains(.write) {
+            return .withResponse
+        }
+        if characteristic.properties.contains(.writeWithoutResponse) {
+            return .withoutResponse
+        }
+        return nil
     }
 
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -352,6 +369,9 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let error = error {
             print("Error discovering characteristics: \(error.localizedDescription)")
+            if pendingConnectPeripheral?.identifier == peripheral.identifier {
+                completePendingConnect(false)
+            }
             return
         }
         
@@ -361,6 +381,11 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 
                 // Check if this is a known printer characteristic
                 if allowedCharacteristics.contains(characteristic.uuid) {
+                    guard preferredWriteType(for: characteristic) != nil else {
+                        print("Known printer characteristic is not writable: \(characteristic.uuid)")
+                        continue
+                    }
+
                     targetCharacteristic = characteristic
                     print("Target printer characteristic found: \(characteristic.uuid)")
                     
@@ -376,7 +401,7 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
                 
                 // Fallback: if no specific characteristic found, use any writable one
                 if targetCharacteristic == nil && targetService?.uuid == service.uuid {
-                    if characteristic.properties.contains(.write) || characteristic.properties.contains(.writeWithoutResponse) {
+                    if preferredWriteType(for: characteristic) != nil {
                         targetCharacteristic = characteristic
                         print("Using fallback writable characteristic: \(characteristic.uuid)")
                         completePendingConnect(true)
