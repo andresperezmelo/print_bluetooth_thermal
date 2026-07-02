@@ -15,7 +15,9 @@ class PrintBluetoothThermal {
       return true;
     } else if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       try {
-        bluetoothState = await _channel.invokeMethod('ispermissionbluetoothgranted');
+        bluetoothState = await _channel.invokeMethod(
+          'ispermissionbluetoothgranted',
+        );
         //if(kDebugMode) print("llego: $bluetoothState");
       } on PlatformException catch (e) {
         if (kDebugMode) print("Fallo Bluetooth status: '${e.message}'.");
@@ -52,11 +54,8 @@ class PrintBluetoothThermal {
       try {
         final List result = await _channel.invokeMethod('pairedbluetooths');
         //if(kDebugMode) print("llego: $result");
-        for (String item in result) {
-          List<String> info = item.split("#");
-          String name = info[0];
-          String mac = info[1];
-          items.add(BluetoothInfo(name: name, macAdress: mac));
+        for (final item in result) {
+          items.add(BluetoothInfo.fromNative(item));
         }
       } on PlatformException catch (e) {
         if (kDebugMode) print("Fail pairedBluetooths: '${e.message}'.");
@@ -136,7 +135,9 @@ class PrintBluetoothThermal {
         return false;
       }
     } else {
-      throw UnimplementedError("This functionality is not yet implemented. Please use the writeBytes option.");
+      throw UnimplementedError(
+        "This functionality is not yet implemented. Please use the writeBytes option.",
+      );
     }
   }
 
@@ -183,10 +184,50 @@ class PrintBluetoothThermal {
 class BluetoothInfo {
   late String name;
   late String macAdress;
+  late String type;
+  late String typeLabel;
+  int? deviceClass;
+  int? majorDeviceClass;
+  List<String> services;
+
   BluetoothInfo({
     required this.name,
     required this.macAdress,
+    this.type = 'unknown',
+    this.typeLabel = 'Unknown',
+    this.deviceClass,
+    this.majorDeviceClass,
+    this.services = const [],
   });
+
+  factory BluetoothInfo.fromNative(dynamic value) {
+    if (value is Map) {
+      return BluetoothInfo(
+        name: value['name']?.toString() ?? '',
+        macAdress: value['macAdress']?.toString() ?? '',
+        type: value['type']?.toString() ?? 'unknown',
+        typeLabel: value['typeLabel']?.toString() ?? 'Unknown',
+        deviceClass:
+            value['deviceClass'] is int ? value['deviceClass'] as int : null,
+        majorDeviceClass: value['majorDeviceClass'] is int
+            ? value['majorDeviceClass'] as int
+            : null,
+        services: value['services'] is List
+            ? List<String>.from(
+                (value['services'] as List).map(
+                  (service) => service.toString(),
+                ),
+              )
+            : const [],
+      );
+    }
+
+    final info = value.toString().split("#");
+    return BluetoothInfo(
+      name: info.isNotEmpty ? info[0] : '',
+      macAdress: info.length > 1 ? info[1] : '',
+    );
+  }
 }
 
 class PrintTextSize {
@@ -194,8 +235,5 @@ class PrintTextSize {
   late int size;
   late String text;
 
-  PrintTextSize({
-    required this.size,
-    required this.text,
-  });
+  PrintTextSize({required this.size, required this.text});
 }
