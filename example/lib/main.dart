@@ -26,7 +26,12 @@ class MyAppState extends State<MyApp> {
   List<BluetoothInfo> items = [];
 
   // Opciones del menú corregidas gramaticalmente
-  final List<String> _options = ["Check Bluetooth Permission", "Check Bluetooth State", "Check Connection Status", "Refresh Platform Info"];
+  final List<String> _options = [
+    "Check Bluetooth Permission",
+    "Check Bluetooth State",
+    "Check Connection Status",
+    "Refresh Platform Info",
+  ];
 
   String _selectSize = "2";
   final _txtText = TextEditingController(text: "Hello Developer!");
@@ -63,7 +68,8 @@ class MyAppState extends State<MyApp> {
               onSelected: (Object select) async {
                 String sel = select as String;
                 if (sel == "Check Bluetooth Permission") {
-                  bool status = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+                  bool status =
+                      await PrintBluetoothThermal.isPermissionBluetoothGranted;
                   setState(() {
                     _info = "Bluetooth Permission Granted: $status";
                   });
@@ -75,7 +81,8 @@ class MyAppState extends State<MyApp> {
                 } else if (sel == "Refresh Platform Info") {
                   initPlatformState();
                 } else if (sel == "Check Connection Status") {
-                  final bool result = await PrintBluetoothThermal.connectionStatus;
+                  final bool result =
+                      await PrintBluetoothThermal.connectionStatus;
                   connected = result;
                   setState(() {
                     _info = "Connection Status: $result";
@@ -84,13 +91,10 @@ class MyAppState extends State<MyApp> {
               },
               itemBuilder: (BuildContext context) {
                 return _options.map((String option) {
-                  return PopupMenuItem(
-                    value: option,
-                    child: Text(option),
-                  );
+                  return PopupMenuItem(value: option, child: Text(option));
                 }).toList();
               },
-            )
+            ),
           ],
         ),
         body: SingleChildScrollView(
@@ -101,10 +105,15 @@ class MyAppState extends State<MyApp> {
               // CARD 1: Status & Info
               Card(
                 elevation: 0,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -116,12 +125,20 @@ class MyAppState extends State<MyApp> {
                         children: [
                           Text(
                             "Printer Status",
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: connected ? Colors.green.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.15),
+                              color: connected
+                                  ? Colors.green.withValues(alpha: 0.15)
+                                  : Colors.grey.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -129,14 +146,18 @@ class MyAppState extends State<MyApp> {
                               children: [
                                 Icon(
                                   connected ? Icons.check_circle : Icons.cancel,
-                                  color: connected ? Colors.green : Colors.grey[700],
+                                  color: connected
+                                      ? Colors.green
+                                      : Colors.grey[700],
                                   size: 16,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   connected ? "CONNECTED" : "DISCONNECTED",
                                   style: TextStyle(
-                                    color: connected ? Colors.green[800] : Colors.grey[800],
+                                    color: connected
+                                        ? Colors.green[800]
+                                        : Colors.grey[800],
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
@@ -157,7 +178,9 @@ class MyAppState extends State<MyApp> {
                       const SizedBox(height: 8),
                       Text(
                         "Info: $_info",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -170,20 +193,32 @@ class MyAppState extends State<MyApp> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.settings_ethernet, color: Theme.of(context).colorScheme.secondary),
+                          Icon(
+                            Icons.settings_ethernet,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             "Paper Width:",
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -193,7 +228,12 @@ class MyAppState extends State<MyApp> {
                         items: options.map((String option) {
                           return DropdownMenuItem<String>(
                             value: option,
-                            child: Text(option, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text(
+                              option,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
@@ -211,7 +251,9 @@ class MyAppState extends State<MyApp> {
               // CARD 3: Bluetooth Search & Devices List
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -222,7 +264,10 @@ class MyAppState extends State<MyApp> {
                         children: [
                           Text(
                             "Available Printers",
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           FilledButton.icon(
                             onPressed: _progress ? null : getBluetoots,
@@ -245,8 +290,13 @@ class MyAppState extends State<MyApp> {
                         height: 200,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Theme.of(context).colorScheme.surfaceContainerLowest,
-                          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLowest,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            width: 0.5,
+                          ),
                         ),
                         child: items.isEmpty
                             ? Center(
@@ -255,18 +305,28 @@ class MyAppState extends State<MyApp> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.print_disabled, size: 40, color: Colors.grey[400]),
+                                      Icon(
+                                        Icons.print_disabled,
+                                        size: 40,
+                                        color: Colors.grey[400],
+                                      ),
                                       const SizedBox(height: 8),
                                       Text(
                                         "No paired devices found",
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         "Link the printer in settings, then press Search.",
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                        style: TextStyle(
+                                          color: Colors.grey[500],
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -275,24 +335,47 @@ class MyAppState extends State<MyApp> {
                             : ListView.separated(
                                 padding: const EdgeInsets.all(8),
                                 itemCount: items.length,
-                                separatorBuilder: (context, index) => const Divider(height: 1),
+                                separatorBuilder: (context, index) =>
+                                    const Divider(height: 1),
                                 itemBuilder: (context, index) {
                                   final item = items[index];
                                   return ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
                                     leading: CircleAvatar(
-                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                      child: Icon(Icons.print, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 20),
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                      child: Icon(
+                                        _bluetoothIcon(item.type),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                        size: 20,
+                                      ),
                                     ),
                                     title: Text(
-                                      item.name.isNotEmpty ? item.name : "Unknown Device",
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      item.name.isNotEmpty
+                                          ? item.name
+                                          : "Unknown Device",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     subtitle: Text(
-                                      "MAC: ${item.macAdress}",
-                                      style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.grey[600]),
+                                      "${item.typeLabel} - MAC: ${item.macAdress}",
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
-                                    trailing: const Icon(Icons.chevron_right, size: 18),
+                                    trailing: const Icon(
+                                      Icons.chevron_right,
+                                      size: 18,
+                                    ),
                                     onTap: () => connect(item.macAdress),
                                   );
                                 },
@@ -306,10 +389,17 @@ class MyAppState extends State<MyApp> {
                               child: OutlinedButton.icon(
                                 onPressed: disconnect,
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: Theme.of(context).colorScheme.error,
-                                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                 ),
-                                icon: const Icon(Icons.power_settings_new, size: 18),
+                                icon: const Icon(
+                                  Icons.power_settings_new,
+                                  size: 18,
+                                ),
                                 label: const Text("Disconnect"),
                               ),
                             ),
@@ -322,7 +412,7 @@ class MyAppState extends State<MyApp> {
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ],
                   ),
@@ -335,7 +425,10 @@ class MyAppState extends State<MyApp> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 0.5),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -344,12 +437,17 @@ class MyAppState extends State<MyApp> {
                     children: [
                       Text(
                         "Direct Raw Printing",
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Send raw text natively without external templates.",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -372,16 +470,24 @@ class MyAppState extends State<MyApp> {
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Theme.of(context).colorScheme.outline, width: 0.8),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline,
+                                width: 0.8,
+                              ),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 hint: const Text('Size'),
                                 value: _selectSize,
-                                items: <String>['1', '2', '3', '4', '5'].map((String value) {
+                                items: <String>['1', '2', '3', '4', '5'].map((
+                                  String value,
+                                ) {
                                   return DropdownMenuItem<String>(
                                     value: value,
-                                    child: Text("Size $value", style: const TextStyle(fontSize: 14)),
+                                    child: Text(
+                                      "Size $value",
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   );
                                 }).toList(),
                                 onChanged: (String? select) {
@@ -391,7 +497,7 @@ class MyAppState extends State<MyApp> {
                                 },
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -437,13 +543,36 @@ class MyAppState extends State<MyApp> {
     });
   }
 
+  IconData _bluetoothIcon(String type) {
+    switch (type) {
+      case 'printer':
+        return Icons.print;
+      case 'mobile':
+      case 'phone':
+        return Icons.smartphone;
+      case 'computer':
+        return Icons.computer;
+      case 'audio':
+        return Icons.headphones;
+      case 'wearable':
+        return Icons.watch;
+      case 'peripheral':
+        return Icons.keyboard;
+      case 'imaging':
+        return Icons.image;
+      default:
+        return Icons.bluetooth;
+    }
+  }
+
   Future<void> getBluetoots() async {
     setState(() {
       _progress = true;
       _msjprogress = "Searching...";
       items = [];
     });
-    final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
+    final List<BluetoothInfo> listResult =
+        await PrintBluetoothThermal.pairedBluetooths;
 
     setState(() {
       _progress = false;
@@ -466,7 +595,9 @@ class MyAppState extends State<MyApp> {
       _msjprogress = "Connecting...";
       connected = false;
     });
-    final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
+    final bool result = await PrintBluetoothThermal.connect(
+      macPrinterAddress: mac,
+    );
     debugPrint("state connected: $result");
     if (result) connected = true;
     setState(() {
@@ -508,9 +639,15 @@ class MyAppState extends State<MyApp> {
       String enter = '\n';
       await PrintBluetoothThermal.writeBytes(enter.codeUnits);
       String text = "Hello";
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: "$text size 2"));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: "$text size 3"));
+      await PrintBluetoothThermal.writeString(
+        printText: PrintTextSize(size: 1, text: text),
+      );
+      await PrintBluetoothThermal.writeString(
+        printText: PrintTextSize(size: 2, text: "$text size 2"),
+      );
+      await PrintBluetoothThermal.writeString(
+        printText: PrintTextSize(size: 3, text: "$text size 3"),
+      );
     } else {
       debugPrint("Bluetooth disconnected $conexionStatus");
     }
@@ -519,7 +656,10 @@ class MyAppState extends State<MyApp> {
   Future<List<int>> testTicket() async {
     List<int> bytes = [];
     final profile = await CapabilityProfile.load();
-    final generator = Generator(optionprinttype == "58 mm" ? PaperSize.mm58 : PaperSize.mm80, profile);
+    final generator = Generator(
+      optionprinttype == "58 mm" ? PaperSize.mm58 : PaperSize.mm80,
+      profile,
+    );
     bytes += generator.reset();
 
     final ByteData data = await rootBundle.load('assets/mylogo.jpg');
@@ -527,20 +667,50 @@ class MyAppState extends State<MyApp> {
     img.Image? image = img.decodeImage(bytesImg);
 
     if (Platform.isIOS) {
-      final resizedImage = img.copyResize(image!, width: image.width ~/ 1.3, height: image.height ~/ 1.3, interpolation: img.Interpolation.nearest);
+      final resizedImage = img.copyResize(
+        image!,
+        width: image.width ~/ 1.3,
+        height: image.height ~/ 1.3,
+        interpolation: img.Interpolation.nearest,
+      );
       final bytesimg = Uint8List.fromList(img.encodeJpg(resizedImage));
     }
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: const PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text('Special 2: blåbærgrød', styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text(
+      'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ',
+    );
+    bytes += generator.text(
+      'Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ',
+      styles: const PosStyles(codeTable: 'CP1252'),
+    );
+    bytes += generator.text(
+      'Special 2: blåbærgrød',
+      styles: const PosStyles(codeTable: 'CP1252'),
+    );
 
     bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: const PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: const PosStyles(align: PosAlign.right), linesAfter: 1);
+    bytes += generator.text(
+      'Reverse text',
+      styles: const PosStyles(reverse: true),
+    );
+    bytes += generator.text(
+      'Underlined text',
+      styles: const PosStyles(underline: true),
+      linesAfter: 1,
+    );
+    bytes += generator.text(
+      'Align left',
+      styles: const PosStyles(align: PosAlign.left),
+    );
+    bytes += generator.text(
+      'Align center',
+      styles: const PosStyles(align: PosAlign.center),
+    );
+    bytes += generator.text(
+      'Align right',
+      styles: const PosStyles(align: PosAlign.right),
+      linesAfter: 1,
+    );
 
     bytes += generator.row([
       PosColumn(
@@ -566,15 +736,11 @@ class MyAppState extends State<MyApp> {
 
     bytes += generator.text(
       'Text size 50%',
-      styles: const PosStyles(
-        fontType: PosFontType.fontB,
-      ),
+      styles: const PosStyles(fontType: PosFontType.fontB),
     );
     bytes += generator.text(
       'Text size 100%',
-      styles: const PosStyles(
-        fontType: PosFontType.fontA,
-      ),
+      styles: const PosStyles(fontType: PosFontType.fontA),
     );
     bytes += generator.text(
       'Text size 200%',
@@ -591,7 +757,10 @@ class MyAppState extends State<MyApp> {
   Future<List<int>> testWindows() async {
     List<int> bytes = [];
 
-    bytes += PostCode.text(text: "Size compressed", fontSize: FontSize.compressed);
+    bytes += PostCode.text(
+      text: "Size compressed",
+      fontSize: FontSize.compressed,
+    );
     bytes += PostCode.text(text: "Size normal", fontSize: FontSize.normal);
     bytes += PostCode.text(text: "Bold", bold: true);
     bytes += PostCode.text(text: "Inverse", inverse: true);
@@ -599,9 +768,17 @@ class MyAppState extends State<MyApp> {
     bytes += PostCode.text(text: "Size big", fontSize: FontSize.big);
     bytes += PostCode.enter();
 
-    bytes += PostCode.row(texts: ["PRODUCT", "VALUE"], proportions: [60, 40], fontSize: FontSize.compressed);
+    bytes += PostCode.row(
+      texts: ["PRODUCT", "VALUE"],
+      proportions: [60, 40],
+      fontSize: FontSize.compressed,
+    );
     for (int i = 0; i < 3; i++) {
-      bytes += PostCode.row(texts: ["Item $i", "$i,00"], proportions: [60, 40], fontSize: FontSize.compressed);
+      bytes += PostCode.row(
+        texts: ["Item $i", "$i,00"],
+        proportions: [60, 40],
+        fontSize: FontSize.compressed,
+      );
     }
 
     bytes += PostCode.line();
@@ -616,7 +793,9 @@ class MyAppState extends State<MyApp> {
     bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
     if (connectionStatus) {
       String text = "${_txtText.text}\n";
-      bool result = await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: int.parse(_selectSize), text: text));
+      bool result = await PrintBluetoothThermal.writeString(
+        printText: PrintTextSize(size: int.parse(_selectSize), text: text),
+      );
       debugPrint("print raw text result: $result");
       setState(() {
         _msj = "Printed successfully: $result";

@@ -39,3 +39,6 @@ build/
 **/GeneratedPluginRegistrant.h
 **/GeneratedPluginRegistrant.m
 **/GeneratedPluginRegistrant.swift
+
+# FVM Version Cache
+.fvm/

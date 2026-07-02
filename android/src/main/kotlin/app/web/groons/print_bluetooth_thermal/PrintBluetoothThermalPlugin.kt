@@ -2,6 +2,7 @@ package app.web.groons.print_bluetooth_thermal
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.ContextWrapper
@@ -240,7 +241,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
         result.success(false)
       }
     }else if (call.method == "pairedbluetooths") {
-      var lista:List<String> = dispositivosVinculados()
+      var lista:List<Map<String, Any?>> = dispositivosVinculados()
 
       result.success(lista)
     }else if(call.method == "disconnect"){
@@ -314,9 +315,9 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     outputStream?.close()
   }
 
-  private fun dispositivosVinculados():List<String>{
+  private fun dispositivosVinculados():List<Map<String, Any?>>{
 
-    val listItems: MutableList<String> = mutableListOf()
+    val listItems: MutableList<Map<String, Any?>> = mutableListOf()
 
     val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     if (bluetoothAdapter == null) {
@@ -332,13 +333,47 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     //Log.d(TAG, "buscando dispositivos: ")
     val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
     pairedDevices?.forEach { device ->
-      val deviceName = device.name
+      val bluetoothClass = device.bluetoothClass
+      val deviceType = deviceType(bluetoothClass, device.name)
       val deviceHardwareAddress = device.address
-      listItems.add("$deviceName#$deviceHardwareAddress")
+      listItems.add(mapOf(
+        "name" to (device.name ?: ""),
+        "macAdress" to deviceHardwareAddress,
+        "type" to deviceType.first,
+        "typeLabel" to deviceType.second,
+        "deviceClass" to bluetoothClass?.deviceClass,
+        "majorDeviceClass" to bluetoothClass?.majorDeviceClass,
+        "services" to device.uuids?.map { it.uuid.toString() }
+      ))
       //Log.d(TAG, "dispositivo: ${device.name}")
     }
 
     return listItems;
+  }
+
+  private fun deviceType(bluetoothClass: BluetoothClass?, name: String?): Pair<String, String> {
+    val normalizedName = name?.lowercase() ?: ""
+    if (normalizedName.contains("printer") || normalizedName.contains("pos") || normalizedName.contains("thermal")) {
+      return Pair("printer", "Printer")
+    }
+
+    return when (bluetoothClass?.majorDeviceClass) {
+      BluetoothClass.Device.Major.PHONE -> Pair("mobile", "Mobile")
+      BluetoothClass.Device.Major.COMPUTER -> Pair("computer", "Computer")
+      BluetoothClass.Device.Major.AUDIO_VIDEO -> Pair("audio", "Audio")
+      BluetoothClass.Device.Major.IMAGING -> {
+        if ((bluetoothClass.deviceClass and 0x0080) != 0) {
+          Pair("printer", "Printer")
+        } else {
+          Pair("imaging", "Imaging")
+        }
+      }
+      BluetoothClass.Device.Major.PERIPHERAL -> Pair("peripheral", "Peripheral")
+      BluetoothClass.Device.Major.WEARABLE -> Pair("wearable", "Wearable")
+      BluetoothClass.Device.Major.TOY -> Pair("toy", "Toy")
+      BluetoothClass.Device.Major.HEALTH -> Pair("health", "Health")
+      else -> Pair("unknown", "Unknown")
+    }
   }
 
   private fun mensajeToast(mensaje: String){

@@ -5,7 +5,7 @@ import CoreBluetooth
 @objc(PrintBluetoothThermalPlugin)
 public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,  FlutterPlugin {
     var centralManager: CBCentralManager?  // Define una variable para guardar el gestor central de bluetooth
-    var discoveredDevices: [String] = []  //lista de bluetooths encontrados
+    var discoveredDevices: [[String: Any]] = []  //lista de bluetooths encontrados
     var connectedPeripheral: CBPeripheral!  //dispositivo conectado
     var targetService: CBService? // Variable global para el servicio objetivo
     //var characteristics: [CBCharacteristic] = [] // Variable global para almacenar las características encontradas
@@ -257,11 +257,44 @@ public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CB
         if let deviceName = peripheral.name {
             let deviceAddress = peripheral.identifier.uuidString
             //print("name \(deviceName) Address: \(deviceAddress)")
-            let device = "\(deviceName)#\(deviceAddress)"
-            if !discoveredDevices.contains(device) {
+            let services = (advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]) ?? []
+            let type = deviceType(name: deviceName, services: services)
+            let device: [String: Any] = [
+                "name": deviceName,
+                "macAdress": deviceAddress,
+                "type": type.0,
+                "typeLabel": type.1,
+                "services": services.map { $0.uuidString }
+            ]
+            if !discoveredDevices.contains(where: { ($0["macAdress"] as? String) == deviceAddress }) {
                 discoveredDevices.append(device)
             }
         }
+    }
+
+    private func deviceType(name: String, services: [CBUUID]) -> (String, String) {
+        let normalizedName = name.lowercased()
+        let serviceIds = Set(services.map { $0.uuidString.uppercased() })
+        let printerServices: Set<String> = [
+            "00001101-0000-1000-8000-00805F9B34FB",
+            "49535343-FE7D-4AE5-8FA9-9FAFD205E455",
+            "A76EB9E0-F3AC-4990-84CF-3A94D2426B2B"
+        ]
+
+        if !printerServices.isDisjoint(with: serviceIds) || normalizedName.contains("printer") || normalizedName.contains("pos") || normalizedName.contains("thermal") {
+            return ("printer", "Printer")
+        }
+        if normalizedName.contains("headset") || normalizedName.contains("headphone") || normalizedName.contains("speaker") || normalizedName.contains("audio") {
+            return ("audio", "Audio")
+        }
+        if normalizedName.contains("phone") || normalizedName.contains("iphone") || normalizedName.contains("mobile") {
+            return ("mobile", "Mobile")
+        }
+        if normalizedName.contains("computer") || normalizedName.contains("macbook") || normalizedName.contains("laptop") || normalizedName.contains("pc") {
+            return ("computer", "Computer")
+        }
+
+        return ("unknown", "Unknown")
     }
 
     //funcion para verificar si desconecto el dispositivo

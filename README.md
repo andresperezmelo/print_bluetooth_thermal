@@ -1,286 +1,307 @@
 # print_bluetooth_thermal
 
-## Package to print tickets on 58mm or 80mm thermal printers on Android, iOS, macOS or Windows.
+Flutter plugin for printing tickets on 58 mm and 80 mm Bluetooth thermal printers.
 
-This package emerged as an alternative to the current ones that use the location permission and Google Play
-blocks apps that don't explain what to use location permission for.
+The plugin supports Android, iOS, macOS, and Windows. On Android it works with paired Bluetooth devices and does not require location permission for printer connections. On iOS and macOS it uses CoreBluetooth and discovers nearby BLE peripherals.
 
----
+## Features
 
-> ⚠️ **Important Notice for iOS & macOS Users:**  
-> Starting from version **1.2.2**, this package has migrated to a **100% pure Swift** implementation utilizing **Swift Package Manager (SPM)** to support Flutter 3.44+ and modern Apple environments.  
-> 
-> If your project strictly requires legacy **CocoaPods** integration, please lock your package dependency to version **1.2.1** in your `pubspec.yaml`:
-> ```yaml
-> print_bluetooth_thermal: 1.2.1
-> ```
+- Check Bluetooth permission and power state.
+- List available Bluetooth devices.
+- Connect and disconnect a printer.
+- Send ESC/POS byte data to a printer.
+- Print plain text with built-in text size support.
+- Read connection status.
+- Read basic platform and battery information where supported.
+- Expose device type metadata for UI icons, such as printer, mobile, computer, audio, wearable, peripheral, imaging, or unknown.
 
----
+## Platform Support
 
-## Getting Started
+| API | Android | iOS | macOS | Windows |
+| --- | :---: | :---: | :---: | :---: |
+| `isPermissionBluetoothGranted` | Yes | Yes | Yes | Yes |
+| `bluetoothEnabled` | Yes | Yes | Yes | Yes |
+| `pairedBluetooths` | Yes | Yes | Yes | Yes |
+| `connectionStatus` | Yes | Yes | Yes | Yes |
+| `connect` | Yes | Yes | Yes | Yes |
+| `writeBytes` | Yes | Yes | Yes | Yes |
+| `writeString` | Yes | Yes | Yes | No |
+| `disconnect` | Yes | Yes | Yes | Yes |
+| `platformVersion` | Yes | Yes | Yes | No |
+| `batteryLevel` | Yes | Yes | No | No |
 
-* Import the package  [print_bluetooth_thermal](https://pub.dev/packages/print_bluetooth_thermal).
+## Requirements
 
-* If you want to print images, qr code, barcode use the package [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
+- Dart SDK `>=3.2.0 <4.0.0`
+- Flutter SDK `>=3.44.0`
+- A Bluetooth thermal printer that supports writable ESC/POS-compatible services or characteristics.
 
-# Configure on iOS
-> Add the following keys in `ios/Runner/Info.plist`:
-```xml
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
-<key>NSBluetoothPeripheralUsageDescription</key>
-<string>Bluetooth access to interact with thermal printers</string>
+For images, QR codes, barcodes, and advanced ESC/POS layouts, use an ESC/POS helper package such as `esc_pos_utils_plus` to generate bytes, then send them with `PrintBluetoothThermal.writeBytes`.
+
+## Installation
+
+Add the package to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  print_bluetooth_thermal: ^1.2.2
 ```
 
-# Configure on macOS
-> 1. Add the following keys in `macos/Runner/Info.plist`:
-```xml
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
-<key>NSBluetoothPeripheralUsageDescription</key>
-<string>Bluetooth access to interact with thermal printers</string>
+Then run:
+
+```sh
+flutter pub get
 ```
 
-> 2. Add the Bluetooth entitlement in both `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`:
-```xml
-<key>com.apple.security.device.bluetooth</key>
-<true/>
-```
-
-1. Import the package
+Import the package:
 
 ```dart
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 ```
 
+## Android Setup
 
-2. After that you can use 
-``` dart
-PrintBluetoothThermal
+The plugin manifest includes the required Bluetooth permissions:
+
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 ```
 
+For Android 12 and newer, make sure the app has Nearby Devices permission enabled before scanning or connecting.
 
-# Available functions
+Android device type detection is based on `BluetoothClass` and available UUID metadata. This is the most accurate platform for showing printer, mobile, headset/audio, computer, and other icons.
 
-| Comando | Descripción |
-| --- | --- |
-| PrintBluetoothThermal.isPermissionBluetoothGranted | Returns true if the BLUETOOTH_CONNECT permission is enabled, it is only required from android 12 onwards |
-| PrintBluetoothThermal.bluetoothEnabled | Returns true if bluetooth is on |
-| PrintBluetoothThermal.pairedBluetooths | Android: Return all paired bluetooth on the device IOS: Return nearby bluetooths |
-| PrintBluetoothThermal.connectionStatus | Returns true if you are currently connected to the printer |
-| PrintBluetoothThermal.connect | Send connection to ticket printer and wait true if it was successfull, the mac address of the printer's bluetooth must be sent |
-| PrintBluetoothThermal.writeBytes | Send bytes to print, esc_pos_utils_plus package must be used, returns true if successfu |
-| PrintBluetoothThermal.writeString | Strings are sent to be printed by the PrintTextSize class can print from size 1 (50%) to size 5 (400%) |
-|  PrintBluetoothThermal.disconnect | Disconnect print |
-| PrintBluetoothThermal.platformVersion | Gets the android version where it is running, returns String |
-| PrintBluetoothThermal.batteryLevel | Get the percentage of the battery returns int |
+## iOS Setup
 
-# Available commands by platform
-| Function | Android | iOS | macOS | Windows |
-|----------|:-------:|:---:|:-----:|:-------:|
-| PrintBluetoothThermal.isPermissionBluetoothGranted |    ✅   |  ✅  |   ✅   |    ❌    |
-| PrintBluetoothThermal.bluetoothEnabled |    ✅   |  ✅  |   ✅   |    ❌    |
-| PrintBluetoothThermal.pairedBluetooths |    ✅   |  ✅  |   ✅   |    ✅    |
-| PrintBluetoothThermal.connectionStatus |    ✅   |  ✅  |   ✅   |    ✅    |
-| PrintBluetoothThermal.connect |    ✅   |  ✅  |   ✅   |    ✅    |
-| PrintBluetoothThermal.writeBytes |    ✅   |  ✅  |   ✅   |    ✅    |
-| PrintBluetoothThermal.writeString |    ✅   |  ✅  |   ✅   |    ❌    |
-| PrintBluetoothThermal.disconnect |    ✅   |  ✅  |   ✅   |    ✅    |
-| PrintBluetoothThermal.platformVersion |    ✅   |  ✅  |   ✅   |    ❌    |
-| PrintBluetoothThermal.batteryLevel |    ✅   |  ✅  |   ❌   |    ❌    |
+Add Bluetooth usage descriptions to `ios/Runner/Info.plist`:
 
-
-# Examples
-
-**Detect if bluetooth is turned on**
-
-_See if bluetooth is on_
-```dart
-final bool result = await PrintBluetoothThermal.bluetoothEnabled;
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Bluetooth access to interact with thermal printers</string>
 ```
 
-**Read paired bluetooth**
+iOS does not expose Bluetooth MAC addresses or Android-style Bluetooth class values. The plugin uses `CBPeripheral.identifier` as `macAdress` and detects device type best-effort from advertised services and device names.
 
-_Read the bluetooth linked to the phone, to be able to connect to the printer it must have been previously linked in phone settings bluetooth option_
-```dart
-final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
-await Future.forEach(listResult, (BluetoothInfo bluetooth) {
-  String name = bluetooth.name;
-  String mac = bluetooth.macAdress;
-});
+## macOS Setup
+
+Add Bluetooth usage descriptions to `macos/Runner/Info.plist`:
+
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth access to connect 58mm or 80mm thermal printers</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Bluetooth access to interact with thermal printers</string>
 ```
 
-**Connect printer**
-```dart
-String mac = "66:02:BD:06:18:7B";
-final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
+Add the Bluetooth entitlement in `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`:
+
+```xml
+<key>com.apple.security.device.bluetooth</key>
+<true/>
 ```
 
-**Disonnect printer**
-```dart
-final bool result = await PrintBluetoothThermal.disconnect;
+## Apple SPM Notice
+
+Starting with version `1.2.2`, the iOS and macOS implementations use pure Swift with Swift Package Manager support for Flutter 3.44+.
+
+If your project requires legacy CocoaPods integration, pin the package to version `1.2.1`:
+
+```yaml
+dependencies:
+  print_bluetooth_thermal: 1.2.1
 ```
 
-**Detect if connection status**
+## Basic Usage
 
-_The connection is maintained by a Kotlin Corroutine and the printer will not disconnect even if you move it far away_
+### Check Bluetooth State
+
 ```dart
-final bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
+final bool enabled = await PrintBluetoothThermal.bluetoothEnabled;
 ```
 
-**Print text of different sizes**
+### Check Permission
 
 ```dart
- bool conexionStatus = await PrintBluetoothThermal.connectionStatus;
-  if (conexionStatus) {
-    String enter = '\n';
-    await PrintBluetoothThermal.writeBytes(enter.codeUnits);
-    //size of 1-5
-    String text = "Hello $enter";
-    await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text + " size 1"));
-    await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: text + " size 2"));
-    await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: text + " size 3"));
-    await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: text + " size 4"));
-    await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: text + " size 5"));
-  } else {
-    print("the printer is disconnected ($conexionStatus)");
+final bool granted = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+```
+
+### List Devices
+
+```dart
+final List<BluetoothInfo> devices = await PrintBluetoothThermal.pairedBluetooths;
+
+for (final device in devices) {
+  print('Name: ${device.name}');
+  print('Address: ${device.macAdress}');
+  print('Type: ${device.type}');
+  print('Type label: ${device.typeLabel}');
+}
+```
+
+On Android, `pairedBluetooths` returns paired Bluetooth devices. Pair the printer in Android Bluetooth settings first.
+
+On iOS and macOS, `pairedBluetooths` scans nearby Bluetooth peripherals for a short time and returns discovered devices.
+
+### Show Device Icons
+
+`BluetoothInfo.type` can be used to choose icons in your UI:
+
+```dart
+IconData bluetoothIcon(String type) {
+  switch (type) {
+    case 'printer':
+      return Icons.print;
+    case 'mobile':
+    case 'phone':
+      return Icons.smartphone;
+    case 'computer':
+      return Icons.computer;
+    case 'audio':
+      return Icons.headphones;
+    case 'wearable':
+      return Icons.watch;
+    case 'peripheral':
+      return Icons.keyboard;
+    case 'imaging':
+      return Icons.image;
+    default:
+      return Icons.bluetooth;
   }
+}
 ```
 
-**Print on the printer with the package** [esc_pos_utils_plus](https://pub.dev/packages/esc_pos_utils_plus).
+Available metadata:
 
-_call PrintTest()_
+| Field | Description |
+| --- | --- |
+| `name` | Device name. |
+| `macAdress` | Bluetooth MAC address on Android and Windows. On iOS and macOS this is the CoreBluetooth peripheral identifier. The spelling is kept for API compatibility. |
+| `type` | Machine-readable type, such as `printer`, `mobile`, `computer`, `audio`, `wearable`, `peripheral`, `imaging`, or `unknown`. |
+| `typeLabel` | Human-readable device type label. |
+| `deviceClass` | Android Bluetooth class value when available. |
+| `majorDeviceClass` | Android major Bluetooth class value when available. |
+| `services` | Advertised or available service UUIDs when available. |
+
+## Connect and Print
+
+### Connect
+
 ```dart
-Future<void> printTest() async {
-    bool conecctionStatus = await PrintBluetoothThermal.connectionStatus;
-    if (conecctionStatus) {
-      List<int> ticket = await testTicket();
-      final result = await PrintBluetoothThermal.writeBytes(ticket);
-      print("print result: $result");
-    } else {
-      //no connected
-    }
-}
+final bool connected = await PrintBluetoothThermal.connect(
+  macPrinterAddress: device.macAdress,
+);
+```
 
-Future<List<int>> testTicket() async {
-    List<int> bytes = [];
-    // Using default profile
-    final profile = await CapabilityProfile.load();
-    final generator = Generator(PaperSize.mm58, profile);
-    //bytes += generator.setGlobalFont(PosFontType.fontA);
-    bytes += generator.reset();
+### Check Connection Status
 
-    final ByteData data = await rootBundle.load('assets/mylogo.jpg');
-    final Uint8List bytesImg = data.buffer.asUint8List();
-    final image = Imag.decodeImage(bytesImg);
-    // Using `ESC *`
-    bytes += generator.image(image!);
+```dart
+final bool connected = await PrintBluetoothThermal.connectionStatus;
+```
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ', styles: PosStyles());
-    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text(
-      'Special 2: blåbærgrød',
-      styles: PosStyles(codeTable: 'CP1252'),
-    );
+### Print Plain Text
 
-    bytes += generator.text('Bold text', styles: PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: PosStyles(align: PosAlign.right), linesAfter: 1);
+```dart
+final bool printed = await PrintBluetoothThermal.writeString(
+  printText: PrintTextSize(
+    size: 2,
+    text: 'Hello printer\n',
+  ),
+);
+```
 
-    bytes += generator.row([
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col6',
-        width: 6,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-    ]);
+`PrintTextSize.size` accepts values from `1` to `5`. Values outside that range fall back to size `2`.
 
-    //barcode
-    final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
-    bytes += generator.barcode(Barcode.upcA(barData));
+### Print ESC/POS Bytes
 
-    //QR code
-    bytes += generator.qrcode('example.com');
+```dart
+final List<int> bytes = <int>[
+  ...'Hello printer\n'.codeUnits,
+];
 
-    bytes += generator.text(
-      'Text size 50%',
-      styles: PosStyles(
-        fontType: PosFontType.fontB,
-      ),
-    );
-    bytes += generator.text(
-      'Text size 100%',
-      styles: PosStyles(
-        fontType: PosFontType.fontA,
-      ),
-    );
-    bytes += generator.text(
-      'Text size 200%',
-      styles: PosStyles(
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
-      ),
-    );
+final bool printed = await PrintBluetoothThermal.writeBytes(bytes);
+```
 
-    bytes += generator.feed(2);
-    //bytes += generator.cut();
-    return bytes;
+### Disconnect
+
+```dart
+final bool disconnected = await PrintBluetoothThermal.disconnect;
+```
+
+## Complete Flow Example
+
+```dart
+Future<void> printExample() async {
+  final bool bluetoothOn = await PrintBluetoothThermal.bluetoothEnabled;
+  if (!bluetoothOn) {
+    throw Exception('Bluetooth is disabled');
+  }
+
+  final List<BluetoothInfo> devices = await PrintBluetoothThermal.pairedBluetooths;
+  if (devices.isEmpty) {
+    throw Exception('No Bluetooth devices found');
+  }
+
+  final BluetoothInfo printer = devices.firstWhere(
+    (device) => device.type == 'printer',
+    orElse: () => devices.first,
+  );
+
+  final bool connected = await PrintBluetoothThermal.connect(
+    macPrinterAddress: printer.macAdress,
+  );
+
+  if (!connected) {
+    throw Exception('Could not connect to ${printer.name}');
+  }
+
+  await PrintBluetoothThermal.writeString(
+    printText: PrintTextSize(size: 2, text: 'Test print\n'),
+  );
+
+  await PrintBluetoothThermal.disconnect;
 }
 ```
 
-# Screenshot of the example app, you can copy the code from the example
+## Troubleshooting
+
+- Android 12 or newer: verify Nearby Devices permission is granted.
+- Android: pair the printer in system Bluetooth settings before calling `pairedBluetooths`.
+- iOS and macOS: make sure Bluetooth usage descriptions are present in `Info.plist`.
+- macOS: make sure the Bluetooth entitlement is enabled.
+- If connection succeeds but printing fails, verify the printer supports ESC/POS and exposes a writable service or characteristic.
+- If iOS shows `unknown` device types, that is expected for devices that do not advertise recognizable services or names.
+- If `writeString` is needed on Windows, use `writeBytes` instead because `writeString` is not implemented for Windows.
+
+## Example App
+
+The `example/` directory contains a Flutter app that scans devices, displays device type icons, connects to a printer, and sends test print data.
+
+Run it with:
+
+```sh
+cd example
+flutter run
+```
+
+## Images
+
 ![App example Android](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/myapp.png)
-# Ticket printed with various sizes
+
 ![Print sizes](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/size.jpeg)
-# Ticket printed with various forms
+
 ![Use package print_bluetooth_thermal 58 mm](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print.jpeg)
+
 ![Use package print_bluetooth_thermal 80 mm](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/print80mm.jpg)
 
+## License
 
-# Built with 🛠️
+See [LICENSE](LICENSE).
 
-_Thanks to these tools this fabulous project has been created_
+## Author
 
-* [Dart](https://dart.dev/) - language used
-* [kotlin](https://kotlinlang.org/) - language used
-* [Swift](https://www.swift.com/) - language used
-* [Flutter](https://flutter.dev/) - framework used
-
-# Donate
-[![Donate](https://raw.githubusercontent.com/andresperezmelo/print_bluetooth_thermal/refs/heads/main/Donate_PayPal.png)](https://www.paypal.com/donate/?hosted_button_id=8UMQ755US94XL)
-
-# License
-Note: This license has also been called the "New BSD License" or "Modified BSD License". See also the 2-clause BSD License.
-
-Copyright <YEAR> <COPYRIGHT HOLDER>
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-<br/>
-
-Created with ❤️ by [andresperezmelo](https://github.com/andresperezmelo) 😊
-[Andres Perez Melo](https://www.linkedin.com/in/andr%C3%A9s-p%C3%A9rez-melo-756413218/)
-
-
-
+Created by [andresperezmelo](https://github.com/andresperezmelo).
