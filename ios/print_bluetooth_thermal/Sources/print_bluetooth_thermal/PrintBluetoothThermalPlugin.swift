@@ -3,382 +3,303 @@ import UIKit
 import CoreBluetooth
 
 @objc(PrintBluetoothThermalPlugin)
-public class PrintBluetoothThermalPlugin: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,  FlutterPlugin {
-    var centralManager: CBCentralManager?  // Define una variable para guardar el gestor central de bluetooth
-    var discoveredDevices: [String] = []  //lista de bluetooths encontrados
-    var connectedPeripheral: CBPeripheral!  //dispositivo conectado
-    var targetService: CBService? // Variable global para el servicio objetivo
-    //var characteristics: [CBCharacteristic] = [] // Variable global para almacenar las características encontradas
-    var targetCharacteristic: CBCharacteristic? // Variable global para almacenar la característica objetivo
+public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralManagerDelegate, CBPeripheralDelegate {
 
+    private var centralManager: CBCentralManager?
+    private var connectedPeripheral: CBPeripheral?
+    private var targetCharacteristic: CBCharacteristic?
+    private var discoveredDevices: [String] = []
 
-    var flutterResult: FlutterResult? //para el resul de flutter
-    var bytes: [UInt8]? //variable para almacenar los bytes que llegan
-    var stringprint = ""; //variable para almacenar los string que llegan
+    // UUIDs comunes en impresoras térmicas BLE / ESC-POS
+    private let allowedServiceUUIDs: [CBUUID] = [
+        CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"),
+        CBUUID(string: "49535343-FE7D-4AE5-8FA9-9FAFD205E455"),
+        CBUUID(string: "A76EB9E0-F3AC-4990-84CF-3A94D2426B2B"),
+        CBUUID(string: "E7810A71-73AE-499D-8C15-FAA9AEF0C3F2"),
+        CBUUID(string: "18F0")
+    ]
 
-    // En el método init, inicializa el gestor central con un delegado
-    //para solicitar el permiso del bluetooth
-    override init() {
-        super.init()
+    private let allowedCharacteristicUUIDs: [CBUUID] = [
+        CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"),
+        CBUUID(string: "49535343-8841-43F4-A8D4-ECBE34729BB3"),
+        CBUUID(string: "A76EB9E2-F3AC-4990-84CF-3A94D2426B2B"),
+        CBUUID(string: "E7810A71-73AE-499D-8C15-FAA9AEF0C3F2"),
+        CBUUID(string: "BEF8D6C9-9C21-4C9E-B632-BD58C1009F9F")
+    ]
+
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())
+        let instance = PrintBluetoothThermalPlugin()
+        registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "groons.web.app/print", binaryMessenger: registrar.messenger())
-    let instance = PrintBluetoothThermalPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-  }
-
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    // En el método init, inicializa el gestor central con un delegado
-    //para solicitar el permiso del bluetooth
-    if (self.centralManager == nil) {
-        self.centralManager = CBCentralManager(delegate: self, queue: nil)
-    }
-
-    //para iniciar la variable result
-    self.flutterResult = result
-    //result("iOS " + UIDevice.current.systemVersion)
-    //let argumento = call.arguments as! String //leer el argumento recibido
-    if call.method == "getPlatformVersion" { // Verifica si se está llamando el método "getPlatformVersion"
-      let iosVersion = UIDevice.current.systemVersion // Obtiene la versión de iOS
-      result("iOS " + iosVersion) // Devuelve el resultado como una cadena de texto
-    } else if call.method == "getBatteryLevel" {
-      let device = UIDevice.current
-      let batteryState = device.batteryState
-      let batteryLevel = device.batteryLevel * 100
-      result(Int(batteryLevel))
-    } else if call.method == "bluetoothenabled"{
-      switch centralManager?.state {
-      case .poweredOn:
-          result(true)
-      default:
-          result(false)
-      }
-    } else if call.method == "ispermissionbluetoothgranted"{
-      //let centralManager = CBCentralManager()
-      if #available(iOS 10.0, *) {
-        switch centralManager?.state {
-        case .poweredOn:
-          print("Bluetooth is on")
-          result(true)
-        default:
-          print("Bluetooth is off")
-          result(false)
-        }
-      }
-    } else if call.method == "pairedbluetooths" {
-      //print("buscando bluetooths");
-      //let discoveredDevices = scanForBluetoothDevices(duration: 5.0)
-      //print("Discovered devices: \(discoveredDevices)")
-      switch centralManager?.state {
-        case .unknown:
-            //print("El estado del bluetooth es desconocido")
-            break
-        case .resetting:
-            //print("El bluetooth se está reiniciando")
-            break
-        case .unsupported:
-            //print("El bluetooth no es compatible con este dispositivo")
-            break
-        case .unauthorized:
-            //print("El bluetooth no está autorizado para esta app")
-            break
-        case .poweredOff:
-            //print("El bluetooth está apagado")
-            centralManager?.stopScan()
-        case .poweredOn:
-            //print("El bluetooth está encendido")
-            //Escanea todos los bluetooths disponibles
-            centralManager?.scanForPeripherals(withServices: nil, options: nil)
-            // Escanea todos los dispositivos Bluetooth vinculados
-            centralManager?.retrieveConnectedPeripherals(withServices: [])
-        @unknown default:
-            //print("El estado del bluetooth es desconocido (default)")
-            break
-      }
-
-        // despues de 5 segundos se para la busqueda y se devuelve la lista de dispositivos disponibles
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            self.centralManager?.stopScan()
-            print("Stopped scanning -> Discovered devices: \(self.discoveredDevices.count)")
-            result(self.discoveredDevices)
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if centralManager == nil {
+            centralManager = CBCentralManager(delegate: self, queue: nil)
         }
 
-    } 
-    else if call.method == "connect"{
-        let macAddress = call.arguments as! String 
-        // Busca el dispositivo con la dirección MAC dada
-        let peripherals = centralManager?.retrievePeripherals(withIdentifiers: [UUID(uuidString: macAddress)!])
-        guard let peripheral = peripherals?.first else {
-          //print("No se encontró ningún dispositivo con la dirección MAC \(macAddress)")
-          result(false)
-          return
-        }
+        switch call.method {
+        case "getPlatformVersion":
+            result("iOS " + UIDevice.current.systemVersion)
 
-        // Intenta conectar con el dispositivo
-        centralManager?.connect(peripheral, options: nil)
-
-        // Verifica si la conexión fue exitosa después de un tiempo de espera
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            if peripheral.state == .connected {
-                //print("Conexión exitosa con el dispositivo \(peripheral.name ?? "Desconocido")")
-                self.connectedPeripheral = peripheral
-
-                self.connectedPeripheral.delegate = self
-                // Discover services of the connected peripheral
-                //se ejecuta los servicios descubiertos en primer peripheral
-                self.connectedPeripheral?.discoverServices(nil)
-                result(true)
+        case "getBatteryLevel":
+            UIDevice.current.isBatteryMonitoringEnabled = true
+            let batteryLevel = UIDevice.current.batteryLevel
+            if batteryLevel < 0 {
+                result(FlutterError(code: "UNAVAILABLE", message: "Nivel de batería no disponible", details: nil))
             } else {
-                //print("La conexión con el dispositivo \(peripheral.name ?? "Desconocido") falló")
-                result(false)
+                result(Int(batteryLevel * 100))
             }
-        }
-  
-    }else if call.method == "connectionstatus"{
-      if connectedPeripheral?.state == CBPeripheralState.connected {
-          //print("El dispositivo periférico está conectado.")
-          result(true)
-      } else {
-          //print("El dispositivo periférico no está conectado.")
-          result(false)
-      }
-    }else if call.method == "writebytes"{
-        guard let arguments = call.arguments as? [Int] else {
-          // Manejar el caso en que los argumentos no son del tipo esperado
-          return
-        }
-        //let bytes = arguments
-        self.bytes = arguments.map { UInt8($0) } //No se esta usando
 
-        if let characteristic = targetCharacteristic {
-            // Utiliza la variable characteristic desempaquetada aquí
-            //print("bytes count: \(self.bytes?.count)")
-            guard let listbytes = call.arguments as? [UInt8] else {
-                // Manejar el caso en que los argumentos no son del tipo esperado
-                return
+        case "bluetoothenabled":
+            result(centralManager?.state == .poweredOn)
+
+        case "ispermissionbluetoothgranted":
+            if #available(iOS 13.1, *) {
+                let auth = CBCentralManager.authorization
+                result(auth == .allowedAlways)
+            } else if #available(iOS 13.0, *) {
+                let auth = centralManager?.authorization ?? .notDetermined
+                result(auth == .allowedAlways)
+            } else {
+                result(centralManager?.state == .poweredOn)
             }
-            //self.connectedPeripheral?.writeValue(Data(listbytes), for: characteristic, type: .withoutResponse) //.withResponse, .withoutResponse
 
-            //Imprimir bloques de 150 bytes en la impresora para que no se sature
-            let data: Data = Data(listbytes) // Datos que deseas imprimir
-            let chunkSize = 150 // Tamaño de cada fragmento en bytes
+        case "pairedbluetooths":
+            handleScanDevices(result: result)
 
-            var offset = 0
-            while offset < data.count {
-                let chunkRange = offset..<min(offset + chunkSize, data.count)
-                let chunkData = data.subdata(in: chunkRange)
-                //print("chunkData count: \(chunkData.count)")
-                // Envía el fragmento para imprimir utilizando la característica deseada
+        case "connect":
+            handleConnect(call: call, result: result)
 
-                var writeType = CBCharacteristicWriteType.withoutResponse;
-                if characteristic.properties.contains(.write) {
-                   writeType = CBCharacteristicWriteType.withResponse;
-                }
+        case "connectionstatus":
+            let isConnected = (connectedPeripheral?.state == .connected)
+            result(isConnected)
 
-                 self.connectedPeripheral?.writeValue(chunkData, for: characteristic, type: writeType)
-                   
-                offset += chunkSize
-            }
-            //la respuesta va en peripheral
-            //self.flutterResult?(true)
-        } else {
-            print("No hay caracteristica para imprimir")
-            result(false)
-        }
+        case "writebytes":
+            handleWriteBytes(call: call, result: result)
 
-      } else if call.method == "printstring"{
-        self.stringprint = call.arguments as! String
-        //print("llego a printstring\(self.stringprint)")
-        if let characteristic = targetCharacteristic {
-            if self.stringprint.count > 0 {
-                    //ver el tamaño del texto
-                    var size = 0
-                    var texto = ""
-                    let linea = self.stringprint.components(separatedBy: "///")
-                    if linea.count > 1 {
-                        size = Int(linea[0]) ?? 0
-                        texto = String(linea[1])
-                        if size < 1 || size > 5 {
-                            size = 2
-                        }
-                    } else {
-                        size = 2
-                        texto = self.stringprint
-                    }
-                    let sizeBytes: [[UInt8]] = [
-                                [0x1d, 0x21, 0x00], // La fuente no se agranda 0
-                                [0x1b, 0x4d, 0x01], // Fuente ASCII comprimida 1
-                                [0x1b, 0x4d, 0x00], //Fuente estándar ASCII    2
-                                [0x1d, 0x21, 0x11], // Altura doblada 3
-                                [0x1d, 0x21, 0x22], // Altura doblada 4
-                                [0x1d, 0x21, 0x33] // Altura doblada 5
-                            ]
-                    let resetBytes: [UInt8] = [0x1b, 0x40]
+        case "printstring":
+            handlePrintString(call: call, result: result)
 
-                    // Envío de los datos
-                    let datasize = Data(sizeBytes[size])
+        case "disconnect":
+            handleDisconnect(result: result)
 
-                    var writeType = CBCharacteristicWriteType.withoutResponse;
-                    if characteristic.properties.contains(.write) {
-                        writeType = CBCharacteristicWriteType.withResponse;
-                    }
-
-                    connectedPeripheral?.writeValue(datasize, for: characteristic, type: writeType)
-
-                    let data = Data(texto.utf8)
-                    connectedPeripheral?.writeValue(data, for: characteristic, type: writeType)
-
-                    // reseteo de la impresora
-                    let datareset = Data(resetBytes)
-                    connectedPeripheral?.writeValue(datareset, for: characteristic, type: writeType)
-                    stringprint = ""
-
-                    //la respuesta va en peripheral si es .withResponse
-                    //self.flutterResult?(true)
-                }
-        } else {
-            print("No hay caracteristica para imprimir")
-            result(false)
-        }
-        } else if call.method == "disconnect"{
-        centralManager?.cancelPeripheralConnection(connectedPeripheral)
-        targetCharacteristic = nil
-        //la respuesta va en centralManager segunda funcion
-        //result(true)
-      } else {
-        result(FlutterMethodNotImplemented) // Si se llama otro método que no está implementado, se devuelve un error
-      }
-  }
-
-  
-    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        //print("Discovered \(peripheral.name ?? "Unknown") at \(RSSI) dBm")
-        if let deviceName = peripheral.name {
-            let deviceAddress = peripheral.identifier.uuidString
-            //print("name \(deviceName) Address: \(deviceAddress)")
-            let device = "\(deviceName)#\(deviceAddress)"
-            if !discoveredDevices.contains(device) {
-                discoveredDevices.append(device)
-            }
+        default:
+            result(FlutterMethodNotImplemented)
         }
     }
 
-    //funcion para verificar si desconecto el dispositivo
-    public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        if error != nil {
-            //print("Error al desconectar del dispositivo: \(error!.localizedDescription)")
-            self.flutterResult?(false)
-        } else {
-        //print("Se ha desconectado del dispositivo con éxito")
-         self.flutterResult?(true)
-        }
-    }
+    // =======================================================
+    // Handlers de Métodos
+    // =======================================================
 
-     //detectar los servicios descubiertos y guardarlo para poder imprimir
-    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-           if let error = error {
-               print("Error discovering services: \(error.localizedDescription)")
-               return
-           }
+    private func handleScanDevices(result: @escaping FlutterResult) {
+        discoveredDevices.removeAll()
 
-           if let services = peripheral.services {
-               for service in services {
-                   print("Service discovered: \(service.uuid)")
-                   let allowedServices = [
-                        CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"),
-                        CBUUID(string: "49535343-FE7D-4AE5-8FA9-9FAFD205E455"),
-                        CBUUID(string: "A76EB9E0-F3AC-4990-84CF-3A94D2426B2B")
-                   ]
-
-                   if allowedServices.contains(service.uuid) {
-                       print("Service found: \(service.uuid)") 
-                       // Por ejemplo, puedes descubrir las características del servicio
-                       peripheral.discoverCharacteristics(nil, for: service)
-
-                       // También puedes almacenar el servicio en una variable para futuras referencias
-                       // targetService = service
-                       self.targetService = service;
-                   }
-
-                   // Aquí puedes realizar operaciones adicionales con cada servicio encontrado, como descubrir características
-                   peripheral.discoverCharacteristics(nil, for: service)
-               }
-           }
-    }
-
-    // Implementación del método peripheral(_:didDiscoverCharacteristicsFor:error:) para buscar las caracteristicas del dispositivo bluetooth
-    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        if let error = error {
-            print("Error discovering characteristics: \(error.localizedDescription)")
+        guard centralManager?.state == .poweredOn else {
+            result(discoveredDevices)
             return
         }
 
-        if let discoveredCharacteristics = service.characteristics {
-            for characteristic in discoveredCharacteristics {
-                //print("characteristics found: \(characteristic.uuid)")
-            
-                let allowedCharacteristics = [
-                    CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"), 
-                    CBUUID(string: "49535343-8841-43F4-A8D4-ECBE34729BB3"), 
-                    CBUUID(string: "A76EB9E2-F3AC-4990-84CF-3A94D2426B2B")
-                ]
+        // Obtener dispositivos ya conectados al sistema con servicios conocidos
+        let connectedList = centralManager?.retrieveConnectedPeripherals(withServices: allowedServiceUUIDs) ?? []
+        for peripheral in connectedList {
+            let name = peripheral.name ?? "Unknown"
+            let deviceEntry = "\(name)#\(peripheral.identifier.uuidString)"
+            if !discoveredDevices.contains(deviceEntry) {
+                discoveredDevices.append(deviceEntry)
+            }
+        }
 
-                if allowedCharacteristics.contains(characteristic.uuid) {
-                    targetCharacteristic = characteristic // Guarda la característica objetivo en la variable global
-                    print("Target characteristic found: \(characteristic.uuid)")
-                 
-                    if characteristic.properties.contains(.write) {
-                        // La característica admite escritura
-                        print("characteristics found: \(characteristic.uuid) La característica admite escritura")
-                    } else {
-                        // La característica no admite escritura
-                        print("characteristics found: \(characteristic.uuid) La característica no admite escritura")
-                    }
-                    break
-                }
+        // Iniciar escaneo BLE general
+        centralManager?.scanForPeripherals(withServices: nil, options: nil)
+
+        // Detener escaneo tras 4 segundos y devolver resultados
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { [weak self] in
+            guard let self = self else { return }
+            self.centralManager?.stopScan()
+            result(self.discoveredDevices)
+        }
+    }
+
+    private func handleConnect(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let macAddress = call.arguments as? String,
+              let uuid = UUID(uuidString: macAddress) else {
+            result(false)
+            return
+        }
+
+        let peripherals = centralManager?.retrievePeripherals(withIdentifiers: [uuid])
+        guard let peripheral = peripherals?.first else {
+            result(false)
+            return
+        }
+
+        connectedPeripheral = peripheral
+        connectedPeripheral?.delegate = self
+        centralManager?.connect(peripheral, options: nil)
+
+        // Esperar conexión y descubrir servicios
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { [weak self] in
+            guard let self = self else { return }
+            if self.connectedPeripheral?.state == .connected {
+                self.connectedPeripheral?.discoverServices(self.allowedServiceUUIDs)
+                result(true)
+            } else {
+                result(false)
             }
         }
     }
 
-    // Implementación del método peripheral(_:didWriteValueFor:error:) para saber si la impresion fue exitosa si se pasa .withResponse
-    public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        if let error = error {
-           print("Error al escribir en la característica: \(error.localizedDescription)")
-            self.flutterResult?(false)
-           return
+    private func handleWriteBytes(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        var rawData: Data?
+
+        if let typedData = call.arguments as? FlutterStandardTypedData {
+            rawData = typedData.data
+        } else if let intList = call.arguments as? [Int] {
+            rawData = Data(intList.map { UInt8($0 & 0xFF) })
+        } else if let numList = call.arguments as? [NSNumber] {
+            rawData = Data(numList.map { UInt8($0.intValue & 0xFF) })
         }
-         self.flutterResult?(true)
-        print("Escritura exitosa en la característica: \(characteristic.uuid)")
-        // Aquí puedes realizar operaciones adicionales con la respuesta de la escritura
+
+        guard let data = rawData,
+              let peripheral = connectedPeripheral,
+              let characteristic = targetCharacteristic else {
+            result(false)
+            return
+        }
+
+        let chunkSize = 150
+        var offset = 0
+        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+
+        while offset < data.count {
+            let chunkRange = offset..<min(offset + chunkSize, data.count)
+            let chunkData = data.subdata(in: chunkRange)
+            peripheral.writeValue(chunkData, for: characteristic, type: writeType)
+            offset += chunkSize
+        }
+
+        result(true)
     }
-    
+
+    private func handlePrintString(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let stringPrint = call.arguments as? String,
+              let peripheral = connectedPeripheral,
+              let characteristic = targetCharacteristic else {
+            result(false)
+            return
+        }
+
+        var size = 2
+        var texto = stringPrint
+        let linea = stringPrint.components(separatedBy: "///")
+
+        if linea.count > 1 {
+            let parsedSize = Int(linea[0]) ?? 2
+            size = (parsedSize >= 1 && parsedSize <= 5) ? parsedSize : 2
+            texto = linea[1]
+        }
+
+        let sizeBytes: [[UInt8]] = [
+            [0x1d, 0x21, 0x00],
+            [0x1b, 0x4d, 0x01],
+            [0x1b, 0x4d, 0x00],
+            [0x1d, 0x21, 0x11],
+            [0x1d, 0x21, 0x22],
+            [0x1d, 0x21, 0x33]
+        ]
+        let resetBytes: [UInt8] = [0x1b, 0x40]
+
+        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+
+        // 1. Tamaño
+        peripheral.writeValue(Data(sizeBytes[size]), for: characteristic, type: writeType)
+        // 2. Texto
+        if let textData = texto.data(using: .isoLatin1) ?? texto.data(using: .utf8) {
+            peripheral.writeValue(textData, for: characteristic, type: writeType)
+        }
+        // 3. Reset / Salto
+        peripheral.writeValue(Data(resetBytes), for: characteristic, type: writeType)
+
+        result(true)
+    }
+
+    private func handleDisconnect(result: @escaping FlutterResult) {
+        if let peripheral = connectedPeripheral {
+            centralManager?.cancelPeripheralConnection(peripheral)
+        }
+        connectedPeripheral = nil
+        targetCharacteristic = nil
+        result(true)
+    }
+
+    // =======================================================
+    // CBCentralManagerDelegate
+    // =======================================================
+
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
-            case .poweredOn:
-                // El bluetooth está encendido y listo para usar
-                print("Bluetooth está encendido")
-            case .poweredOff:
-                // El bluetooth está apagado
-                print("Bluetooth está apagado")
-            case .resetting:
-                // El bluetooth está reiniciándose
-                print("Bluetooth está reiniciándose")
-            case .unauthorized:
-                // La app no tiene permiso para usar el bluetooth
-                print("La app no tiene permiso para usar el bluetooth")
-            case .unsupported:
-                // El dispositivo no soporta el bluetooth
-                print("El dispositivo no soporta el bluetooth")
-            case .unknown:
-                // El estado del bluetooth es desconocido
-                print("El estado del bluetooth es desconocido")
-            @unknown default:
-                // Otro caso no esperado
-                print("Otro caso no esperado")
+        case .poweredOn:
+            print("CoreBluetooth: Encendido y listo")
+        case .poweredOff:
+            print("CoreBluetooth: Apagado")
+            connectedPeripheral = nil
+            targetCharacteristic = nil
+        case .unauthorized:
+            print("CoreBluetooth: No autorizado")
+        default:
+            break
         }
     }
 
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        if let deviceName = peripheral.name, !deviceName.isEmpty {
+            let deviceAddress = peripheral.identifier.uuidString
+            let deviceEntry = "\(deviceName)#\(deviceAddress)"
+            if !discoveredDevices.contains(deviceEntry) {
+                discoveredDevices.append(deviceEntry)
+            }
+        }
+    }
+
+    public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        connectedPeripheral = nil
+        targetCharacteristic = nil
+    }
+
+    // =======================================================
+    // CBPeripheralDelegate
+    // =======================================================
+
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let error = error {
+            print("Error descubriendo servicios: \(error.localizedDescription)")
+            return
+        }
+
+        guard let services = peripheral.services else { return }
+        for service in services {
+            peripheral.discoverCharacteristics(nil, for: service)
+        }
+    }
+
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let error = error {
+            print("Error descubriendo características: \(error.localizedDescription)")
+            return
+        }
+
+        guard let characteristics = service.characteristics else { return }
+
+        for characteristic in characteristics {
+            if allowedCharacteristicUUIDs.contains(characteristic.uuid) ||
+               characteristic.properties.contains(.write) ||
+               characteristic.properties.contains(.writeWithoutResponse) {
+                targetCharacteristic = characteristic
+                print("Característica de impresión seleccionada: \(characteristic.uuid)")
+                break
+            }
+        }
+    }
 }
-
-

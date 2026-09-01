@@ -1,6 +1,6 @@
 name: print_bluetooth_thermal
 description: Ticket printing for android, location permission is not requested to connect the printer
-version: 1.2.3
+version: 1.2.4
 homepage: https://github.com/andresperezmelo/print_bluetooth_termal
 
 environment:
@@ -16,6 +16,7 @@ dependencies:
   image: ^4.0.17
   plugin_platform_interface: ^2.0.2
   win_ble: ^1.1.1 # Package for Windows Bluetooth plugin
+  web: ^1.1.1 # Soporte web
 
 dev_dependencies:
   flutter_test:
@@ -38,7 +39,7 @@ flutter:
         pluginClass: PrintBluetoothThermalPluginCApi
       #web:
         #pluginClass: PrintBluetoothThermalWeb
-#fileName: print_bluetooth_thermal_web.dart
+        #fileName: print_bluetooth_thermal_web.dart
 
 
 ## Getting Started

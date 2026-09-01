@@ -1,3 +1,20 @@
+## [1.2.4] - 2026-09-01
+
+### Correcciones y Mejoras
+* **Android**:
+  * Solucionado el problema de permisos en Android 12+ solicitando `BLUETOOTH_CONNECT` y `BLUETOOTH_SCAN` en conjunto.
+  * Se corrigieron llamadas que quedaban bloqueadas (`await` infinito) cuando no se tenían permisos.
+  * Optimización de memoria en la creación de buffers de bytes y manejo de corrutinas.
+* **iOS**:
+  * Se corrigieron llamadas que no respondían en `writebytes`, `printstring` y `disconnect`.
+  * Eliminación de desempaquetados forzados (`!`) para prevenir cierres inesperados.
+  * Validación precisa de permisos en iOS 13+ mediante `CBCentralManager.authorization`.
+* **macOS**:
+  * Corrección de cierre inesperado por respuesta duplicada en el MethodChannel al desconectar.
+  * Soporte robusto para la decodificación de bytes enviados desde Flutter.
+* **General**:
+  * Limpieza, orden y estandarización del código en todas las plataformas soportadas (Android, iOS, macOS, Windows).
+
 ## [1.2.3] – 2026-09-01
 
 * **Android (Refactor/Maintenance)**: Migrated Android build configuration to use **Built-in Kotlin** support (AGP 9+ compatibility).
