@@ -40,3 +40,9 @@ flutter:
         #pluginClass: PrintBluetoothThermalWeb
 #fileName: print_bluetooth_thermal_web.dart
 
+
+## Getting Started
+# - update changelog
+# - update version in pubspec.yaml
+# - dart pub publish --dry-run
+# - dart pub publish
