@@ -1,3 +1,10 @@
+## [1.2.3] – 2026-09-01
+
+* **Android (Refactor/Maintenance)**: Migrated Android build configuration to use **Built-in Kotlin** support (AGP 9+ compatibility).
+* **Fix**: Removed explicit `kotlin-gradle-plugin` (KGP) dependency and legacy `kotlinOptions` block to prevent build errors in modern Flutter and Android Gradle Plugin versions.
+* **Fix**: Aligned Java and Kotlin JVM target compatibility (`JvmTarget.JVM_1_8`) in plugin build configuration.
+* **Example**: Updated example project's Gradle configuration to eliminate deprecation warnings.
+
 ## [1.2.2] – 2026-05-22
 
 * **Refactor (iOS & macOS)**: Migrated native iOS and macOS codebases to be **100% pure Swift**.
