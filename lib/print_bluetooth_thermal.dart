@@ -84,7 +84,10 @@ class PrintBluetoothThermal {
   }
 
   ///send connection to ticket printer and wait true if it was successful, the mac address of the printer's bluetooth must be sent
-  static Future<bool> connect({required String macPrinterAddress}) async {
+  static Future<bool> connect({
+    required String macPrinterAddress,
+    Duration timeout = const Duration(seconds: 7),
+  }) async {
     //conectar impresora bluetooth
     bool result = false;
 
@@ -93,7 +96,15 @@ class PrintBluetoothThermal {
       result = await PrintBluetoothThermalWindows.connect(macAddress: mac);
     } else {
       try {
-        result = await _channel.invokeMethod('connect', mac);
+        result = await _channel.invokeMethod(
+          'connect',
+          Platform.isAndroid
+              ? <String, Object>{
+                  'macAddress': mac,
+                  'timeoutMs': timeout.inMilliseconds,
+                }
+              : mac,
+        );
         if (kDebugMode) print("result status connect: $result");
       } on PlatformException catch (e) {
         if (kDebugMode) print("Failed to connect: ${e.message}");

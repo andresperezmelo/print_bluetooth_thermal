@@ -3,6 +3,7 @@ package app.web.groons.print_bluetooth_thermal
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -19,6 +20,10 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import java.io.OutputStream
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.UUID
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +32,9 @@ import kotlinx.coroutines.launch
 
 
 private const val TAG = "====> print: "
+private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 private var outputStream: OutputStream? = null
-private lateinit var mac: String
+private var bluetoothSocket: BluetoothSocket? = null
 
 /** PrintTestPlugin */
 class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
@@ -82,6 +88,11 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
       result.success(permission)
     }else if ( !permissionGranted && sdkversion >= 31) {
       Log.i("warning","permission bluetooth granted is false, check in settings that the permission of nearby devices is activated")
+      result.error(
+        "BLUETOOTH_PERMISSION_DENIED",
+        "Nearby devices permission is required to use a Bluetooth printer.",
+        null,
+      )
       return;
     }else if (call.method == "getPlatformVersion") {
       result.success("Android $androidVersion")
@@ -100,54 +111,28 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
       }
       result.success(state)
     }else if (call.method == "connectionstatus") {
-      if(outputStream != null) {
-        try{
-          outputStream?.run {
-            write(" ".toByteArray())
-            result.success(true)
-            //Log.d(TAG, "paso yes coexion ")
-          }
-        }catch (e: Exception){
-          result.success(false)
-          outputStream = null
-          //mensajeToast("Dispositivo fue desconectado, reconecte")
-          //Log.d(TAG, "state print: ${e.message}")
-        }
-      }else{
-        result.success(false)
-        //Log.d(TAG, "no paso es false ")
-      }
+      result.success(outputStream != null && bluetoothSocket?.isConnected == true)
     } else if (call.method == "connect") {
-      var macimpresora = call.arguments.toString();
-      //Log.d(TAG, "coneccting kt: mac: "+macimpresora);
-      if(macimpresora.length>0){
-        mac = macimpresora;
-      }else{
+      val arguments = call.arguments as? Map<*, *>
+      val macAddress = arguments?.get("macAddress") as? String
+      val timeoutMs = (arguments?.get("timeoutMs") as? Number)?.toLong() ?: 7_000L
+      if(macAddress.isNullOrBlank()){
         result.success(false)
+        return
       }
       GlobalScope.launch(Dispatchers.Main) {
-        if(outputStream == null) {
-          outputStream = connect()?.also {
-            //Log.d(TAG, "connected kt")
-            //result.success("true")
-            //Toast.makeText(this@MainActivity, "Impresora conectada", Toast.LENGTH_SHORT).show()
-          }.apply {
-            result.success(state)
-            //Log.d(TAG, "finalizo tk: conexion state:$state")
-          }
-        }else{
-          //Log.d(TAG, "stream null kt: ")
-          outputStream == null;
-          result.success(false)
+        if (outputStream != null && bluetoothSocket?.isConnected == true) {
+          result.success(true)
+          return@launch
         }
+
+        closeConnection()
+        outputStream = connect(macAddress, timeoutMs)
+        result.success(state)
       }
     }else if (call.method == "writebytes") {
       val lista: List<Int> = call.arguments as List<Int>
-    var bytes: ByteArray = "\n".toByteArray()
-
-    lista.forEach {
-        bytes += it.toByte()
-    }
+      val bytes = ByteArray(lista.size) { index -> lista[index].toByte() }
 
     if (outputStream != null) {
         try {
@@ -166,7 +151,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
             }
         } catch (e: Exception) {
             result.success(false)
-            outputStream = null
+            closeConnection()
             Log.e(TAG, "Error al imprimir: ${e.message}", e)
         }
     } else {
@@ -244,13 +229,8 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
 
       result.success(lista)
     }else if(call.method == "disconnect"){
-      if(outputStream != null){
-        outputStream?.close()
-        outputStream = null
-        result.success(true);
-      }else{
-        result.success(true);
-      }
+      closeConnection()
+      result.success(true);
     }else {
       result.notImplemented()
     }
@@ -273,34 +253,53 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     return batteryLevel
   }
 
-  private suspend fun connect(): OutputStream? {
+  private suspend fun connect(address: String, timeoutMs: Long): OutputStream? {
     state = false
     return withContext(Dispatchers.IO) {
-      var outputStream: OutputStream? = null
       val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
       if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
         try {
-          val bluetoothAddress = mac//"66:02:BD:06:18:7B" // replace with your device's address
-          val bluetoothDevice = bluetoothAdapter.getRemoteDevice(bluetoothAddress)
-          val bluetoothSocket = bluetoothDevice?.createRfcommSocketToServiceRecord(
-            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-          )
+          val bluetoothDevice = bluetoothAdapter.getRemoteDevice(address)
           bluetoothAdapter.cancelDiscovery()
-          bluetoothSocket?.connect()
-          if (bluetoothSocket!!.isConnected) {
-            outputStream = bluetoothSocket!!.outputStream
-            state = true
-            //outputStream.write("\n".toByteArray())
-          }else{
-            state = false
-            Log.d(TAG, "Desconectado: ")
+
+          val deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(
+            timeoutMs.coerceAtLeast(1L)
+          )
+          for (mode in listOf("insecure SPP", "direct channel 1", "secure SPP")) {
+            val remainingNanos = deadlineNanos - System.nanoTime()
+            if (remainingNanos <= 0L) break
+
+            val socket = when (mode) {
+              "insecure SPP" -> bluetoothDevice.createInsecureRfcommSocketToServiceRecord(SPP_UUID)
+              "direct channel 1" -> createDirectRfcommSocket(bluetoothDevice)
+              else -> bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
+            }
+            bluetoothSocket = socket
+            val remainingMs = TimeUnit.NANOSECONDS.toMillis(remainingNanos).coerceAtLeast(1L)
+            val attemptTimeoutMs = if (mode == "secure SPP") {
+              remainingMs
+            } else {
+              remainingMs.coerceAtMost(2_500L)
+            }
+            Log.d(TAG, "connecting with RFCOMM $mode")
+
+            if (connectSocket(socket, attemptTimeoutMs)) {
+              outputStream = socket.outputStream
+              state = true
+              break
+            }
+
+            try {
+              socket.close()
+            } catch (_: Exception) {
+            }
+            bluetoothSocket = null
           }
-          //bluetoothSocket?.close()
         } catch (e: Exception){
           state = false
-          var code:Int = e.hashCode() //1535159 apagado //
+          val code:Int = e.hashCode() //1535159 apagado //
           Log.d(TAG, "connect: ${e.message} code $code")
-          outputStream?.close()
+          closeConnection()
         }
       }else{
         state = false
@@ -310,8 +309,51 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private fun disconncet(){
-    outputStream?.close()
+  private fun createDirectRfcommSocket(device: BluetoothDevice): BluetoothSocket {
+    val method = device.javaClass.getMethod(
+      "createRfcommSocket",
+      Int::class.javaPrimitiveType,
+    )
+    return method.invoke(device, 1) as BluetoothSocket
+  }
+
+  private fun connectSocket(socket: BluetoothSocket, timeoutMs: Long): Boolean {
+    val executor = Executors.newSingleThreadExecutor()
+    val connectFuture = executor.submit { socket.connect() }
+    return try {
+      connectFuture.get(timeoutMs, TimeUnit.MILLISECONDS)
+      socket.isConnected
+    } catch (error: TimeoutException) {
+      try {
+        socket.close()
+      } catch (_: Exception) {
+      }
+      connectFuture.cancel(true)
+      Log.d(TAG, "connect timed out after ${timeoutMs}ms")
+      false
+    } catch (error: ExecutionException) {
+      Log.d(TAG, "connect failed: ${error.cause?.message ?: error.message}")
+      false
+    } catch (error: Exception) {
+      Log.d(TAG, "connect failed: ${error.message}")
+      false
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  private fun closeConnection(){
+    try {
+      outputStream?.close()
+    } catch (_: Exception) {
+    }
+    try {
+      bluetoothSocket?.close()
+    } catch (_: Exception) {
+    }
+    outputStream = null
+    bluetoothSocket = null
+    state = false
   }
 
   private fun dispositivosVinculados():List<String>{
@@ -409,6 +451,7 @@ class PrintBluetoothThermalPlugin: FlutterPlugin, MethodCallHandler {
 
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+    closeConnection()
     channel.setMethodCallHandler(null)
   }
 }
