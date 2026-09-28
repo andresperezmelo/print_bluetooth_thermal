@@ -10,6 +10,25 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     private var targetCharacteristic: CBCharacteristic?
     private var discoveredDevices: [String] = []
 
+    // --- BLE write flow-control state (iOS 18+ fix) ---------------------------
+    // iOS 18 enforces CoreBluetooth transmit-queue flow control strictly: any
+    // writeValue(type:.withoutResponse) issued while the controller queue is full
+    // is silently dropped. The old tight send loop therefore truncated the
+    // ESC/POS stream on iOS >= 18 (QR failed) while "working" on iOS < 18.
+    // We now queue the payload and drain it respecting canSendWriteWithoutResponse
+    // (for .withoutResponse) or the didWriteValueFor ack (for .withResponse).
+    private struct WriteJob {
+        let data: Data
+        var offset: Int
+        let writeType: CBCharacteristicWriteType
+        let result: FlutterResult
+    }
+    private var writeJobs: [WriteJob] = []
+    private var writeProgress = 0
+    private let preferredChunkSize = 150
+    private let writeStallTimeout: TimeInterval = 8.0
+    // -------------------------------------------------------------------------
+
     // UUIDs comunes en impresoras térmicas BLE / ESC-POS
     private let allowedServiceUUIDs: [CBUUID] = [
         CBUUID(string: "00001101-0000-1000-8000-00805F9B34FB"),
@@ -162,31 +181,17 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
             rawData = Data(numList.map { UInt8($0.intValue & 0xFF) })
         }
 
-        guard let data = rawData,
-              let peripheral = connectedPeripheral,
-              let characteristic = targetCharacteristic else {
+        guard let data = rawData else {
             result(false)
             return
         }
 
-        let chunkSize = 150
-        var offset = 0
-        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
-
-        while offset < data.count {
-            let chunkRange = offset..<min(offset + chunkSize, data.count)
-            let chunkData = data.subdata(in: chunkRange)
-            peripheral.writeValue(chunkData, for: characteristic, type: writeType)
-            offset += chunkSize
-        }
-
-        result(true)
+        // Queue + flow-controlled drain instead of a tight, fire-and-forget loop.
+        enqueueWrite(data, result: result)
     }
 
     private func handlePrintString(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        guard let stringPrint = call.arguments as? String,
-              let peripheral = connectedPeripheral,
-              let characteristic = targetCharacteristic else {
+        guard let stringPrint = call.arguments as? String else {
             result(false)
             return
         }
@@ -211,27 +216,121 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
         ]
         let resetBytes: [UInt8] = [0x1b, 0x40]
 
-        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
-
-        // 1. Tamaño
-        peripheral.writeValue(Data(sizeBytes[size]), for: characteristic, type: writeType)
-        // 2. Texto
+        // Build one ordered payload (size + text + reset) and send it through the
+        // same flow-controlled path so the three writes can no longer be dropped
+        // or reordered under load.
+        var payload = Data()
+        payload.append(Data(sizeBytes[size]))
         if let textData = texto.data(using: .isoLatin1) ?? texto.data(using: .utf8) {
-            peripheral.writeValue(textData, for: characteristic, type: writeType)
+            payload.append(textData)
         }
-        // 3. Reset / Salto
-        peripheral.writeValue(Data(resetBytes), for: characteristic, type: writeType)
+        payload.append(Data(resetBytes))
 
-        result(true)
+        enqueueWrite(payload, result: result)
     }
 
     private func handleDisconnect(result: @escaping FlutterResult) {
+        failAllJobs()
         if let peripheral = connectedPeripheral {
             centralManager?.cancelPeripheralConnection(peripheral)
         }
         connectedPeripheral = nil
         targetCharacteristic = nil
         result(true)
+    }
+
+    // =======================================================
+    // Cola de escritura con control de flujo (BLE)
+    // =======================================================
+
+    private func enqueueWrite(_ data: Data, result: @escaping FlutterResult) {
+        guard let peripheral = connectedPeripheral,
+              peripheral.state == .connected,
+              targetCharacteristic != nil else {
+            result(false)
+            return
+        }
+        guard !data.isEmpty else {
+            result(true)
+            return
+        }
+
+        let writeType: CBCharacteristicWriteType =
+            targetCharacteristic!.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+        writeJobs.append(WriteJob(data: data, offset: 0, writeType: writeType, result: result))
+        drainWriteQueue()
+    }
+
+    /// Sends as many chunks as CoreBluetooth will currently accept, then parks
+    /// until the relevant delegate callback resumes it. Runs on the CoreBluetooth
+    /// callback queue (main), so no locking is needed.
+    private func drainWriteQueue() {
+        guard let peripheral = connectedPeripheral,
+              peripheral.state == .connected,
+              let characteristic = targetCharacteristic else {
+            failAllJobs()
+            return
+        }
+
+        while !writeJobs.isEmpty {
+            let writeType = writeJobs[0].writeType
+
+            // For write-without-response, only send while the controller has room.
+            if writeType == .withoutResponse && !peripheral.canSendWriteWithoutResponse {
+                scheduleWatchdog()
+                return
+            }
+
+            let data = writeJobs[0].data
+            let offset = writeJobs[0].offset
+            // Never exceed the negotiated max write length for this write type
+            // (a small ATT MTU can make 150 too large -> another silent drop).
+            let maxLen = max(20, peripheral.maximumWriteValueLength(for: writeType))
+            let chunkLen = min(preferredChunkSize, maxLen)
+            let end = min(offset + chunkLen, data.count)
+            let chunk = data.subdata(in: offset..<end)
+
+            peripheral.writeValue(chunk, for: characteristic, type: writeType)
+            writeJobs[0].offset = end
+            writeProgress += 1
+
+            if writeType == .withResponse {
+                // Wait for didWriteValueFor; the peripheral paces us.
+                scheduleWatchdog()
+                return
+            }
+
+            // write-without-response: chunk handed to the controller.
+            if writeJobs[0].offset >= data.count {
+                let job = writeJobs.removeFirst()
+                job.result(true)
+                // fall through to start the next queued job (if any)
+            }
+            // else loop and re-check canSendWriteWithoutResponse
+        }
+    }
+
+    /// Fails the head job if no write progress happens within the timeout window,
+    /// so a stalled or powered-off printer can never hang the Dart future.
+    private func scheduleWatchdog() {
+        let snapshot = writeProgress
+        DispatchQueue.main.asyncAfter(deadline: .now() + writeStallTimeout) { [weak self] in
+            guard let self = self, !self.writeJobs.isEmpty else { return }
+            if self.writeProgress == snapshot {
+                let job = self.writeJobs.removeFirst()
+                job.result(false)
+                self.drainWriteQueue()
+            }
+        }
+    }
+
+    private func failAllJobs() {
+        guard !writeJobs.isEmpty else { return }
+        let jobs = writeJobs
+        writeJobs.removeAll()
+        for job in jobs {
+            job.result(false)
+        }
     }
 
     // =======================================================
@@ -244,6 +343,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
             print("CoreBluetooth: Encendido y listo")
         case .poweredOff:
             print("CoreBluetooth: Apagado")
+            failAllJobs()
             connectedPeripheral = nil
             targetCharacteristic = nil
         case .unauthorized:
@@ -264,6 +364,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     }
 
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        failAllJobs()
         connectedPeripheral = nil
         targetCharacteristic = nil
     }
@@ -301,5 +402,29 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
                 break
             }
         }
+    }
+
+    // Ack for .withResponse writes: advance to the next chunk / job.
+    public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard !writeJobs.isEmpty else { return }
+        writeProgress += 1
+
+        if error != nil {
+            let job = writeJobs.removeFirst()
+            job.result(false)
+            drainWriteQueue()
+            return
+        }
+
+        if writeJobs[0].offset >= writeJobs[0].data.count {
+            let job = writeJobs.removeFirst()
+            job.result(true)
+        }
+        drainWriteQueue()
+    }
+
+    // Controller drained enough to accept more .withoutResponse writes: resume.
+    public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
+        drainWriteQueue()
     }
 }
