@@ -8,6 +8,10 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     private var centralManager: CBCentralManager?
     private var connectedPeripheral: CBPeripheral?
     private var targetCharacteristic: CBCharacteristic?
+    private var pendingConnectResult: FlutterResult?
+    private var connectAttempt = 0
+    private var remainingCharacteristicServices = 0
+    private var fallbackCharacteristic: CBCharacteristic?
     private var discoveredDevices: [String] = []
 
     // Control de flujo para escritura
@@ -74,7 +78,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
             handleConnect(call: call, result: result)
 
         case "connectionstatus":
-            result(connectedPeripheral?.state == .connected)
+            result(connectedPeripheral?.state == .connected && targetCharacteristic != nil)
 
         case "writebytes":
             handleWriteBytes(call: call, result: result)
@@ -132,19 +136,44 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
             return
         }
 
+        guard pendingConnectResult == nil else {
+            result(false)
+            return
+        }
+
+        if connectedPeripheral?.identifier == peripheral.identifier,
+           peripheral.state == .connected,
+           targetCharacteristic != nil {
+            result(true)
+            return
+        }
+
         connectedPeripheral = peripheral
         connectedPeripheral?.delegate = self
-        centralManager?.connect(peripheral, options: nil)
+        completePendingWrite(success: false)
+        targetCharacteristic = nil
+        fallbackCharacteristic = nil
+        remainingCharacteristicServices = 0
+        pendingConnectResult = result
+        connectAttempt += 1
+        let attempt = connectAttempt
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { [weak self] in
-            guard let self = self else { return }
-            if self.connectedPeripheral?.state == .connected {
-                self.connectedPeripheral?.discoverServices(self.allowedServiceUUIDs)
-                result(true)
-            } else {
-                result(false)
-            }
+        if peripheral.state == .connected {
+            peripheral.discoverServices(nil)
+        } else {
+            centralManager?.connect(peripheral, options: nil)
         }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) { [weak self] in
+            guard let self = self, self.connectAttempt == attempt else { return }
+            self.completePendingConnect(success: false)
+        }
+    }
+
+    private func completePendingConnect(success: Bool) {
+        guard let result = pendingConnectResult else { return }
+        pendingConnectResult = nil
+        result(success)
     }
 
     private func handleWriteBytes(call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -243,7 +272,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
         // Reiniciar watchdog: mientras haya progreso, no se reinicia para evitar el corte en imagenes pesadas
         startWatchdog()
 
-        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
         let maxChunk = peripheral.maximumWriteValueLength(for: writeType)
         let chunkSize = min(maxChunk > 0 ? maxChunk : 150, 150)
 
@@ -293,6 +322,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     }
 
     private func handleDisconnect(result: @escaping FlutterResult) {
+        completePendingConnect(success: false)
         completePendingWrite(success: false)
         if let peripheral = connectedPeripheral {
             centralManager?.cancelPeripheralConnection(peripheral)
@@ -308,6 +338,7 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
 
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state != .poweredOn {
+            completePendingConnect(success: false)
             completePendingWrite(success: false)
             connectedPeripheral = nil
             targetCharacteristic = nil
@@ -325,7 +356,21 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     }
 
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        guard connectedPeripheral?.identifier == peripheral.identifier else { return }
+        completePendingConnect(success: false)
         completePendingWrite(success: false)
+        connectedPeripheral = nil
+        targetCharacteristic = nil
+    }
+
+    public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        guard connectedPeripheral?.identifier == peripheral.identifier else { return }
+        peripheral.discoverServices(nil)
+    }
+
+    public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        guard connectedPeripheral?.identifier == peripheral.identifier else { return }
+        completePendingConnect(success: false)
         connectedPeripheral = nil
         targetCharacteristic = nil
     }
@@ -335,21 +380,36 @@ public class PrintBluetoothThermalPlugin: NSObject, FlutterPlugin, CBCentralMana
     // =======================================================
 
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        guard error == nil, let services = peripheral.services else { return }
+        guard connectedPeripheral?.identifier == peripheral.identifier else { return }
+        guard error == nil, let services = peripheral.services, !services.isEmpty else {
+            completePendingConnect(success: false)
+            return
+        }
+        remainingCharacteristicServices = services.count
         for service in services {
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        guard error == nil, let characteristics = service.characteristics else { return }
-        for characteristic in characteristics {
-            if allowedCharacteristicUUIDs.contains(characteristic.uuid) ||
-               characteristic.properties.contains(.write) ||
-               characteristic.properties.contains(.writeWithoutResponse) {
-                targetCharacteristic = characteristic
-                break
+        guard connectedPeripheral?.identifier == peripheral.identifier,
+              remainingCharacteristicServices > 0 else { return }
+        if error == nil, let characteristics = service.characteristics {
+            for characteristic in characteristics {
+                let writable = characteristic.properties.contains(.write) ||
+                    characteristic.properties.contains(.writeWithoutResponse)
+                guard writable else { continue }
+                if allowedCharacteristicUUIDs.contains(characteristic.uuid) {
+                    if targetCharacteristic == nil { targetCharacteristic = characteristic }
+                } else if fallbackCharacteristic == nil {
+                    fallbackCharacteristic = characteristic
+                }
             }
+        }
+        remainingCharacteristicServices -= 1
+        if remainingCharacteristicServices == 0 {
+            targetCharacteristic = targetCharacteristic ?? fallbackCharacteristic
+            completePendingConnect(success: targetCharacteristic != nil)
         }
     }
 
